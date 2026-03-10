@@ -104,7 +104,17 @@ Game Server → generates game logs
 ### Game Server
 - [x] Set up Spring Boot in build.gradle.kts
 - [x] Set up WebSocket support
-- [ ] Define core game domain models (Player, Card, GameRoom, GamePhase)
+- [ ] Define core game domain models
+  - [ ] Card (type, suit, number)
+  - [ ] Player (HP, maxHp, hand cards, role, general) — depends on Card
+  - [ ] GamePhase (turn phase state machine) — depends on Player
+  - [ ] GameMode (strategy interface + implementations) — depends on Player
+    - [ ] IdentityMode (Lord/Loyalist/Rebel/Spy, hidden roles)
+    - [ ] KingdomMode (Wei/Shu/Wu/Qun, public allegiance)
+    - [ ] OneVsOneMode
+    - [ ] ThreeVsThreeMode
+    - [ ] DoudizhuMode (Landlord/Farmer)
+  - [ ] GameRoom (roomId, players, deck, mode, current phase) — depends on all above
 - [ ] Implement basic game room creation and join API
 - [ ] Implement game turn/phase state machine
 - [ ] Set up MockK and testing infrastructure
