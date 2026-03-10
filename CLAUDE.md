@@ -8,7 +8,7 @@ This project is the backend of the sanguosha game, providing the server-side log
 ## Project Architecture
 ### Code Structure
 - `doc/`            - Documentation for the project
-- `src/`            - Spring Boot game server (Kotlin)
+- `src/`            - Spring Boot 4 game server (Kotlin)
 - `ai-agent/`       - Spring AI agent module (Kotlin) — extracted to separate repo when stable
 - `model-training/` - Mini model training pipeline (Python + PyTorch) — extracted to separate repo when stable
 
@@ -27,7 +27,7 @@ Game Server → generates game logs
 
 ### Technologies
 #### Game Server
-- Spring Boot + Kotlin
+- Spring Boot 4 + Kotlin
 - Spring WebSocket (real-time game state)
 - No JPA (in-memory game state to start)
 - JUnit 5 + MockK (unit and integration testing)
@@ -59,7 +59,7 @@ Game Server → generates game logs
 - Stage 3: Add RAG (card rules and game knowledge retrieval)
 - Stage 4: Fine-tune with LoRA/QLoRA on GTX 1070 Ti
 - Stage 5: Self-play reinforcement learning
-- Stage 6: Serve trained model via Ollama → plug back into agent
+- Stage 6: Serve the trained model via Ollama → plug back into agent
 
 #### Notes
 - AI agent and model training modules will be extracted to separate repos when interfaces stabilize
@@ -98,10 +98,11 @@ Game Server → generates game logs
 ### Coding Standards
 - Never use magic numbers
 - Show me the whole solution and todos before changing code
+- Never build the project because I will do it myself
 
 ## TODOS
 ### Game Server
-- [ ] Set up Spring Boot in build.gradle.kts
+- [x] Set up Spring Boot in build.gradle.kts
 - [ ] Set up WebSocket support
 - [ ] Define core game domain models (Player, Card, GameRoom, GamePhase)
 - [ ] Implement basic game room creation and join API
