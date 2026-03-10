@@ -67,24 +67,24 @@ Game Server → generates game logs
 ### Testing Strategy
 
 #### Game Server Tests
-| Type        | What                                                         | Tool                                      |
-|-------------|--------------------------------------------------------------|-------------------------------------------|
-| Unit        | Game logic — state machine, card effects, legal move validation | JUnit 5 + MockK                        |
-| Integration | REST API and WebSocket endpoints                             | Spring Boot Test + WebSocketStompClient   |
-| Scenario    | Full game flow (deal cards → turns → win condition)          | JUnit 5, in-memory                        |
+| Type        | What                                                            | Tool                                    |
+|-------------|-----------------------------------------------------------------|-----------------------------------------|
+| Unit        | Game logic — state machine, card effects, legal move validation | JUnit 5 + MockK                         |
+| Integration | REST API and WebSocket endpoints                                | Spring Boot Test + WebSocketStompClient |
+| Scenario    | Full game flow (deal cards → turns → win condition)             | JUnit 5, in-memory                      |
 
 #### AI Agent Tests
-| Type        | What                                                         | Tool                                      |
-|-------------|--------------------------------------------------------------|-------------------------------------------|
-| Unit        | Agent parses game state correctly, calls right @Tool functions | JUnit 5 + MockK + Spring AI MockChatModel |
-| Behavioral  | Agent only makes legal moves against real game state         | Ollama locally (tagged @Tag("local-only"))|
-| Simulation  | AI vs AI full game — completes without errors                | Ollama locally (tagged @Tag("local-only"))|
+| Type       | What                                                           | Tool                                       |
+|------------|----------------------------------------------------------------|--------------------------------------------|
+| Unit       | Agent parses game state correctly, calls right @Tool functions | JUnit 5 + MockK + Spring AI MockChatModel  |
+| Behavioral | Agent only makes legal moves against real game state           | Ollama locally (tagged @Tag("local-only")) |
+| Simulation | AI vs AI full game — completes without errors                  | Ollama locally (tagged @Tag("local-only")) |
 
 #### Full Integration Tests (Game Server + AI Agent)
-| Approach                        | How                                                                 | CI  |
-|---------------------------------|---------------------------------------------------------------------|-----|
-| Scripted MockChatModel          | MockChatModel returns pre-scripted valid game actions (deterministic AI player) | Yes |
-| Ollama (real behavior)          | Real LLM plays against game server, tagged `@Tag("local-only")`    | No  |
+| Approach               | How                                                                             | CI  |
+|------------------------|---------------------------------------------------------------------------------|-----|
+| Scripted MockChatModel | MockChatModel returns pre-scripted valid game actions (deterministic AI player) | Yes |
+| Ollama (real behavior) | Real LLM plays against game server, tagged `@Tag("local-only")`                 | No  |
 
 #### Rules
 - No real LLM calls in CI — all CI tests use MockChatModel
