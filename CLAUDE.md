@@ -103,7 +103,7 @@ Game Server → generates game logs
 ## TODOS
 ### Game Server
 - [x] Set up Spring Boot in build.gradle.kts
-- [ ] Set up WebSocket support
+- [x] Set up WebSocket support
 - [ ] Define core game domain models (Player, Card, GameRoom, GamePhase)
 - [ ] Implement basic game room creation and join API
 - [ ] Implement game turn/phase state machine
