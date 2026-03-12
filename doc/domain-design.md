@@ -22,7 +22,7 @@ Card
 ```
 Player
 ├── id: String
-├── general: General              — warrior card; owns identity, HP, skills, and special area
+├── general: General              — hero card; owns identity, HP, skills, and special area
 │   ├── id: GeneralId
 │   ├── hp: Int
 │   ├── maxHp: Int
