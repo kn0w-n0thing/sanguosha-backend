@@ -72,16 +72,16 @@
 
 | CN    | EN                  | Count | Suit / No. | Slot       | Range | Effect                                                                             |
 |-------|---------------------|-------|------------|------------|-------|------------------------------------------------------------------------------------|
-| 诸葛连弩  | Zhuge Crossbow      | 1     | ♦️A        | Weapon     | 1     | No limit on Attack cards played per turn                                           |
-| 朱雀羽扇  | Vermilion Fan       | 1     | ♦️A        | Weapon     | 4     | Any hand card may be used as Fire Attack                                           |
-| 贯石斧   | Boulder Axe         | 1     | ♦️5        | Weapon     | 3     | Discard 2 hand cards to make Attack unavoidable                                    |
-| 吴六剑   | Wu Six Sword        | 1     | ♦️6        | Weapon     | 4     | When your Attack hits, target must play 2 Dodge cards to dodge                     |
-| 三尖两刃刀 | Three-Pointed Blade | 1     | ♦️Q        | Weapon     | 3     | When your Attack hits, you may discard one of target's cards                       |
-| 麒麟弓   | Qilin Bow           | 1     | ♥️5        | Weapon     | 5     | When Attack hits, discard one of target's horse cards                              |
-| 雌雄双股剑 | Gender Swords       | 1     | ♠️2        | Weapon     | 2     | When Attack hits opposite-gender player, target discards 1 hand card or you draw 1 |
-| 寒冰剑   | Ice Sword           | 1     | ♠️2        | Weapon     | 2     | When Attack hits, target discards 2 hand cards instead of taking damage            |
-| 青釭剑   | Qinggang Sword      | 1     | ♠️6        | Weapon     | 2     | Attack ignores all armor effects                                                   |
-| 丈八蛇矛  | Snake Spear         | 1     | ♠️Q        | Weapon     | 3     | Discard 2 hand cards to use as one Attack                                          |
+| 诸葛连弩  | Zhuge Crossbow      | 1     | ♦️A        | Weapon     | 1     | No limit on Attack cards played per turn                                                                                           |
+| 朱雀羽扇  | Vermilion Fan       | 1     | ♦️A        | Weapon     | 4     | You may use a normal Attack as Fire Attack; you may also change any "treat as Attack" effect into Fire Attack                      |
+| 贯石斧   | Boulder Axe         | 1     | ♦️5        | Weapon     | 3     | When your Attack is cancelled by target's Dodge, you may discard 2 cards to make the Attack still take effect                      |
+| 吴六剑   | Wu Six Sword        | 1     | ♦️6        | Weapon     | 2     | Locked skill: all other players of the same kingdom as you gain +1 attack range                                                    |
+| 三尖两刃刀 | Three-Pointed Blade | 1     | ♦️Q        | Weapon     | 3     | When your Attack deals damage, you may discard a hand card and deal 1 damage to a player within distance 1 of the target           |
+| 麒麟弓   | Qilin Bow           | 1     | ♥️5        | Weapon     | 5     | When Attack deals damage, you may discard one of target's horse cards                                                              |
+| 雌雄双股剑 | Gender Swords       | 1     | ♠️2        | Weapon     | 2     | After designating an opposite-gender target with Attack, that target chooses: discard 1 hand card, or you draw 1 (triggers even if dodged) |
+| 寒冰剑   | Ice Sword           | 1     | ♠️2        | Weapon     | 2     | When Attack deals damage, if target has any cards, you may prevent the damage and instead discard 2 of their cards (any area)      |
+| 青釭剑   | Qinggang Sword      | 1     | ♠️6        | Weapon     | 2     | Locked skill: after designating a target with Attack, you ignore that target's armor for this Attack                               |
+| 丈八蛇矛  | Snake Spear         | 1     | ♠️Q        | Weapon     | 3     | You may discard 2 hand cards to use or play as one Attack                                                                          |
 | 藤甲    | Rattan Armor        | 1     | ♣️2        | Armor      | —     | Immune to 南蛮入侵, 万箭齐发, and normal Attack; fire damage +1                            |
 | 仁王盾   | Benevolent Shield   | 1     | ♣️2        | Armor      | —     | Immune to ♠ and ♣ Attack cards                                                     |
 | 白银狮子  | Silver Lion         | 1     | ♣️A        | Armor      | —     | Damage per hit reduced to 1; recover 1 HP when this card leaves equipment area     |
