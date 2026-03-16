@@ -13,10 +13,132 @@ Mode-specific logic (win conditions, role assignment, team composition) is encap
 ### Card
 ```
 Card
-├── type: CardType       — ATTACK, DODGE, PEACH, DUEL, ...
-├── suit: Suit           — SPADE, HEART, CLUB, DIAMOND
-└── number: Int          — 1–13
+├── type: CardType           — see CardType enum below
+├── suit: Suit               — SPADE, HEART, CLUB, DIAMOND
+└── number: Int              — 1 (A) – 13 (K)
+
 ```
+
+#### CardType Enum
+
+Grouped by category for clarity. The runtime `category` property is derived from this enum.
+
+**Basic Cards (基本牌)**
+
+| CardType        | CN    | EN             |
+|-----------------|-------|----------------|
+| `ATTACK`        | 杀    | Attack         |
+| `FIRE_ATTACK`   | 火杀  | Fire Attack    |
+| `THUNDER_ATTACK`| 雷杀  | Thunder Attack |
+| `DODGE`         | 闪    | Dodge          |
+| `PEACH`         | 桃    | Peach          |
+| `WINE`          | 酒    | Wine           |
+
+**Instant Trick Cards (即时锦囊)**
+
+| CardType                  | CN     | EN                     |
+|---------------------------|--------|------------------------|
+| `DUEL`                    | 决斗   | Duel                   |
+| `SOMETHING_FROM_NOTHING`  | 无中生有 | Something from Nothing |
+| `DISMANTLE`               | 过河拆桥 | Dismantle              |
+| `STEAL`                   | 顺手牵羊 | Steal                  |
+| `BORROW_SWORD`            | 借刀杀人 | Borrow Sword           |
+| `NEGATE`                  | 无懈可击 | Negate                 |
+| `CHAIN`                   | 铁索连环 | Chain                  |
+| `FIRE_RAID`               | 火攻   | Fire Raid              |
+| `WAIT_AT_EASE`            | 以逸待劳 | Wait at Ease           |
+| `KNOW_THYSELF`            | 知己知彼 | Know Thyself           |
+| `ALLY_FAR_ATTACK_NEAR`    | 远交近攻 | Ally Far Attack Near   |
+| `HAIL_OF_ARROWS`          | 万箭齐发 | Hail of Arrows         |
+| `BARBARIAN_INVASION`      | 南蛮入侵 | Barbarian Invasion     |
+| `PEACH_GARDEN_OATH`       | 桃园结义 | Peach Garden Oath      |
+| `BOUNTIFUL_HARVEST`       | 五谷丰登 | Bountiful Harvest      |
+
+**Delayed Trick Cards (延时锦囊)**
+
+| CardType      | CN     | EN          |
+|---------------|--------|-------------|
+| `ECSTASY`     | 乐不思蜀 | Ecstasy     |
+| `SUPPRESSION` | 兵粮寸断 | Suppression |
+| `LIGHTNING`   | 闪电   | Lightning   |
+
+**Equipment Cards (装备牌) — Weapons**
+
+| CardType                      | CN      | EN                          | Range |
+|-------------------------------|---------|-----------------------------|-------|
+| `ZHUGE_CROSSBOW`              | 诸葛连弩 | Zhuge Crossbow              | 1     |
+| `VERMILION_BIRD_FAN`          | 朱雀羽扇 | Vermilion Bird Fan          | 4     |
+| `BOULDER_AXE`                 | 贯石斧   | Boulder Axe                 | 3     |
+| `WU_SIX_SWORD`                | 吴六剑   | Wu Six Sword                | 2     |
+| `THREE_POINTED_BLADE`         | 三尖两刃刀 | Three-Pointed Blade        | 3     |
+| `QILIN_BOW`                   | 麒麟弓   | Qilin Bow                   | 5     |
+| `GENDER_SWORDS`               | 雌雄双股剑 | Gender Swords              | 2     |
+| `ICE_SWORD`                   | 寒冰剑   | Ice Sword                   | 2     |
+| `QINGGANG_SWORD`              | 青釭剑   | Qinggang Sword              | 2     |
+| `SNAKE_SPEAR`                 | 丈八蛇矛 | Snake Spear                 | 3     |
+| `GREEN_DRAGON_CRESCENT_BLADE` | 青龙偃月刀 | Green Dragon Crescent Blade | 3   |
+| `HALBERD`                     | 方天画戟 | Halberd                     | 4     |
+
+**Equipment Cards — Armor**
+
+| CardType           | CN     | EN                |
+|--------------------|--------|-------------------|
+| `RATTAN_ARMOR`     | 藤甲   | Rattan Armor      |
+| `BENEVOLENT_SHIELD`| 仁王盾 | Benevolent Shield |
+| `SILVER_LION`      | 白银狮子 | Silver Lion      |
+| `EIGHT_TRIGRAMS`   | 八卦阵 | Eight Trigrams    |
+
+**Equipment Cards — Horses**
+
+| CardType           | CN     | EN              | Slot         |
+|--------------------|--------|-----------------|--------------|
+| `CHITU`            | 赤兔   | Chitu           | Defensive −1 |
+| `ZIXING`           | 紫骍   | Zixing          | Defensive −1 |
+| `DAYUAN`           | 大宛   | Dayuan          | Defensive −1 |
+| `DILU`             | 的卢   | Dilu            | Offensive +1 |
+| `JUEYING`          | 绝影   | Jueying         | Offensive +1 |
+| `ZHUHUANGFEIDIAN`  | 爪黄飞电 | Zhuhuangfeidian | Offensive +1 |
+
+---
+
+#### CardCategory
+
+Derived from `CardType` — no separate field stored on `Card`.
+
+```
+BASIC          — ATTACK, FIRE_ATTACK, THUNDER_ATTACK, DODGE, PEACH, WINE
+INSTANT_TRICK  — DUEL, SOMETHING_FROM_NOTHING, DISMANTLE, STEAL, BORROW_SWORD,
+                 NEGATE, CHAIN, FIRE_RAID, WAIT_AT_EASE, KNOW_THYSELF,
+                 ALLY_FAR_ATTACK_NEAR, HAIL_OF_ARROWS, BARBARIAN_INVASION,
+                 PEACH_GARDEN_OATH, BOUNTIFUL_HARVEST
+DELAYED_TRICK  — ECSTASY, SUPPRESSION, LIGHTNING
+EQUIPMENT      — all weapon / armor / horse types
+```
+
+---
+
+#### DamageType
+
+Determines which armor effects and general skills apply to a hit.
+
+```
+NORMAL   — standard Attack; blocked by BENEVOLENT_SHIELD (♠/♣ attacks), RATTAN_ARMOR
+FIRE     — Fire Attack, or converted by VERMILION_BIRD_FAN; RATTAN_ARMOR takes +1 extra
+THUNDER  — Thunder Attack; bypasses BENEVOLENT_SHIELD
+```
+
+#### EquipmentSlot
+
+Each player's `equipmentArea` enforces one card per slot:
+
+```
+WEAPON           — sets attack range; grants weapon skill
+ARMOR            — passive defensive effect
+OFFENSIVE_HORSE  — your attack range +1
+DEFENSIVE_HORSE  — others' attack range to you −1
+```
+
+> A player may equip at most one card per slot. Playing a new equipment card into an occupied slot discards the old one.
 
 ### Player
 ```
