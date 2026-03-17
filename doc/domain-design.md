@@ -140,25 +140,48 @@ DEFENSIVE_HORSE  — others' attack range to you −1
 
 > A player may equip at most one card per slot. Playing a new equipment card into an occupied slot discards the old one.
 
-### Player
+### Seat
 ```
-Player
+Seat
 ├── id: String
-├── general: General              — hero card; owns identity, HP, skills, and special area
-│   ├── id: GeneralId
-│   ├── hp: Int
-│   ├── maxHp: Int
-│   └── specialArea: List<Card>? — general-specific cards (e.g. Zhuge's Qixing); null if unused
+├── seatIndex: Int               — position for distance calculation and turn order
 ├── handCards: List<Card>
-├── judgmentArea: List<Card>      — delayed tricks pending resolution (乐不思蜀, 兵粮寸断, 闪电)
-├── equipmentArea: Equipment      — named slots for equipped cards
+├── judgmentArea: List<Card>     — delayed tricks pending resolution (乐不思蜀, 兵粮寸断, 闪电)
+├── heroes: List<Hero>           — one hero in standard modes; two in dual-hero mode (non-empty)
+└── allegiance: Allegiance       — sealed; GameMode assigns the right subtype at game start
+```
+
+### Hero
+```
+Hero
+├── heroId: HeroId
+├── gender: Gender               — MALE / FEMALE / NEUTRAL; affects some card/skill targeting
+├── hp: Int
+├── maxHp: Int
+├── skills: List<Skill>          — from hero definition
+├── equipmentArea: EquipmentArea
 │   ├── weapon: Card?
 │   ├── armor: Card?              — e.g. 八卦阵, 藤甲
 │   ├── offensiveHorse: Card?     — +1 attack range
 │   ├── defensiveHorse: Card?     — -1 attack range to opponents
 │   └── treasure: Card?           — e.g. 木牛流马, 玉玺
-├── role: Role?                   — assigned by GameMode (nullable, not all modes use roles)
-└── kingdom: Kingdom?             — Wei / Shu / Wu / Qun (nullable, only KingdomMode)
+└── specialArea: List<Card>?      — hero-specific cards (e.g. Zhuge's Qixing)
+```
+
+> Hand cards and judgment area belong to the seat and are shared across heroes.
+
+### Gender
+```
+MALE / FEMALE / NEUTRAL
+```
+
+### Allegiance
+```
+sealed Allegiance
+├── RoleBased(role: Role)            — IdentityMode / DoudizhuMode
+├── KingdomBased(kingdom: Kingdom)   — KingdomMode
+├── TeamBased(teamId: String)        — 3v3Mode; opaque ID for now, typed Team added later
+└── None                             — 1v1Mode
 ```
 
 ### GamePhase
@@ -189,21 +212,21 @@ Special phases triggered by card effects (e.g. DUEL, PEACH_REQUEST) interrupt th
 ### GameMode (Strategy Interface)
 ```
 GameMode
-├── assignRoles(players: List<Player>)
+├── assignAllegiances(seats: List<Seat>)
 ├── checkWinCondition(room: GameRoom): Winner?
-└── onPlayerDeath(dead: Player, room: GameRoom)
+└── onSeatDeath(dead: Seat, room: GameRoom)
 ```
 
 ### GameRoom
 ```
 GameRoom
 ├── id: String
-├── players: List<Player>
+├── seats: List<Seat>
 ├── deck: ArrayDeque<Card>    — draw pile
 ├── discardPile: List<Card>
 ├── mode: GameMode
 ├── currentPhase: GamePhase
-└── currentPlayerIndex: Int
+└── currentSeatIndex: Int
 ```
 
 ---
@@ -261,19 +284,23 @@ Adapted from the Chinese card game.
 
 ```
 Card
- └──▶ Player
-        └──▶ GameMode
-        └──▶ GamePhase
-               └──▶ GameRoom (aggregates all above)
+ └──▶ Hero
+        └──▶ Seat
+               └──▶ GameMode
+               └──▶ GamePhase
+                      └──▶ GameRoom (aggregates all above)
 ```
 
 ---
 
 ## Design Decisions
 
-| Decision           | Choice                   | Reason                                                  |
-|--------------------|--------------------------|---------------------------------------------------------|
-| Mode extensibility | Strategy pattern         | New modes = new class, no changes to core models        |
-| Role storage       | Nullable field on Player | Not all modes use roles; avoids unnecessary subclassing |
-| Deck               | ArrayDeque               | Efficient draw from front, discard to back              |
-| Game state         | In-memory                | No persistence needed at this stage                     |
+| Decision              | Choice                        | Reason                                                                          |
+|-----------------------|-------------------------------|---------------------------------------------------------------------------------|
+| Mode extensibility    | Strategy pattern              | New modes = new class, no changes to core models                                |
+| Player split          | Seat + Hero                   | Seat owns distance/turns; Hero owns HP/skills/equipment — different lifecycles  |
+| Dual-hero support     | `heroes: List<Hero>` on Seat  | Non-empty list; standard modes have one, dual-hero modes have two               |
+| Mode-specific identity| Sealed `Allegiance` class     | Replaces nullable role/kingdom; type system prevents cross-mode field leakage   |
+| Team info             | `TeamBased(teamId: String)`   | Opaque ID now; typed Team enum added later without structural change             |
+| Deck                  | ArrayDeque                    | Efficient draw from front, discard to back                                      |
+| Game state            | In-memory                     | No persistence needed at this stage                                             |
