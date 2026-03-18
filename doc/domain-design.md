@@ -178,10 +178,10 @@ MALE / FEMALE / NEUTRAL
 ### Allegiance
 ```
 sealed Allegiance
-├── RoleBased(role: Role)            — IdentityMode / DoudizhuMode
+├── RoleBased(role: Role)            — IdentityMode (Lord/Loyalist/Rebel/Spy) / 1v1Mode (Lord/Spy) / DoudizhuMode
 ├── KingdomBased(kingdom: Kingdom)   — KingdomMode
 ├── TeamBased(teamId: String)        — 3v3Mode; opaque ID for now, typed Team added later
-└── None                             — 1v1Mode
+└── None                             — reserved for modes with no identity
 ```
 
 ### GamePhase
@@ -287,10 +287,19 @@ Players belong to a kingdom. Allegiance is **public**. No hidden roles.
 - Win condition: last kingdom with living players
 - Players of the same kingdom cannot attack each other (default rule)
 
-### 1v1 Mode
-- 2 players, each drafts a set of generals from a pool
-- Win condition: eliminate the opponent
-- No roles, no kingdoms
+### 1v1 Mode (竞技模式 · 2 players)
+Identities: **主公 (Lord)** vs **内奸 (Spy)**, drawn randomly. Lord picks first in draft; Spy takes first turn.
+
+**Hero draft:**
+- Pool: 28 heroes (standard + 神话再临·风, 7 banned); 10 drawn randomly — 6 face-up, 4 face-down
+- Alternating picks: Lord 1 → Spy 2 → Lord 2 → Spy 2 → Lord 2 (5 each)
+- Each player selects 3 of their 5 heroes to field and sets the order; heroes are sequential (one active at a time)
+
+**Setup:** 108-card standard deck; 4 starting hand cards each; Spy draws 1 fewer card in the very first draw phase.
+
+**Hero death:** discard all hand cards, equipment, and judgment cards of the fallen hero; immediately reveal and field the next hero with full HP and draw 4 cards.
+
+**Win condition:** all 3 opponent heroes eliminated.
 
 ### 3v3 Mode
 - 6 players split into Team A and Team B (3 per team)
