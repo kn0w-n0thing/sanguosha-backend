@@ -209,6 +209,34 @@ IDLE → JUDGE → DRAW → PLAY → DISCARD → END
 
 Special phases triggered by card effects (e.g. DUEL, PEACH_REQUEST) interrupt the normal turn flow and may occur during PLAY phase.
 
+### Deck
+```
+Deck
+├── drawPile: ArrayDeque<Card>            — private
+├── discardPile: List<Card>               — private
+├── revealedCards: List<Card>             — cards currently exposed (e.g. during 五谷丰登)
+│
+│   — draw pile operations
+├── draw(n: Int): List<Card>              — draw n cards; caller must check remaining first
+├── flip(): Card                          — draw 1 for judgment; publicly revealed, discarded by caller
+├── peek(n: Int): List<Card>             — view top n cards without removing (e.g. 郭嘉/遗计, 诸葛亮/观星)
+├── putOnTop(cards: List<Card>)          — place cards onto top of drawPile (after peek+reorder)
+├── putOnBottom(cards: List<Card>)       — place cards onto bottom of drawPile (after peek+reorder)
+├── search(predicate: (Card) -> Boolean): Card?
+│                                         — find and remove one matching card from drawPile (e.g. 卞夫人/挽危)
+│   — discard pile operations
+├── discard(cards: List<Card>)            — move cards to discardPile
+├── takeFromDiscard(card: Card): Card     — retrieve a specific card from discardPile (e.g. 张昭张纮/固政)
+├── reshuffle()                           — shuffle discardPile back into drawPile
+│
+│   — reveal zone operations
+├── reveal(n: Int)                        — move top n cards from drawPile into revealedCards
+├── takeRevealed(card: Card): Card        — remove one card from revealedCards (player picks)
+├── discardRevealed()                     — discard all remaining revealedCards (cleanup after effect)
+│
+└── remaining: Int                        — cards left in drawPile
+```
+
 ### GameMode (Strategy Interface)
 ```
 GameMode
@@ -222,8 +250,7 @@ GameMode
 GameRoom
 ├── id: String
 ├── seats: List<Seat>
-├── deck: ArrayDeque<Card>    — draw pile
-├── discardPile: List<Card>
+├── deck: Deck
 ├── mode: GameMode
 ├── currentPhase: GamePhase
 └── currentSeatIndex: Int
@@ -284,11 +311,13 @@ Adapted from the Chinese card game.
 
 ```
 Card
- └──▶ Hero
-        └──▶ Seat
-               └──▶ GameMode
-               └──▶ GamePhase
-                      └──▶ GameRoom (aggregates all above)
+ ├──▶ Hero
+ │      └──▶ Seat
+ │             └──▶ GameMode
+ │             └──▶ GamePhase
+ │                    └──▶ GameRoom (aggregates all above)
+ └──▶ Deck
+        └──▶ GameRoom
 ```
 
 ---
