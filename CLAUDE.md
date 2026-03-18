@@ -101,38 +101,130 @@ Game Server → generates game logs
 - Never build the project because I will do it myself
 
 ## TODOS
-### Game Server
+
+Each iteration delivers a playable end-to-end slice: game server + AI agent + model training + frontend.
+Start with 1v1 (simplest mode), then iterate to broader modes.
+
+---
+
+### Iteration 0 — Foundation
+
+#### Game Server
 - [x] Set up Spring Boot in build.gradle.kts
 - [x] Set up WebSocket support
-- [ ] Define core game domain models
-  - [ ] Card (type, suit, number)
-  - [ ] Player (HP, maxHp, hand cards, role, general) — depends on Card
-  - [ ] GamePhase (turn phase state machine) — depends on Player
-  - [ ] GameMode (strategy interface + implementations) — depends on Player
-    - [ ] IdentityMode (Lord/Loyalist/Rebel/Spy, hidden roles)
-    - [ ] KingdomMode (Wei/Shu/Wu/Qun, public allegiance)
-    - [ ] OneVsOneMode
-    - [ ] ThreeVsThreeMode
-    - [ ] DoudizhuMode (Landlord/Farmer)
-  - [ ] GameRoom (roomId, players, deck, mode, current phase) — depends on all above
-- [ ] Implement basic game room creation and join API
-- [ ] Implement game turn/phase state machine
+- [ ] Define core domain models
+  - [ ] Card + CardType / CardCategory / DamageType / EquipmentSlot enums
+  - [ ] Hero (heroId, gender, hp, maxHp, skills, equipmentArea, specialArea)
+  - [ ] Seat (seatIndex, handCards, judgmentArea, heroes, allegiance)
+  - [ ] Deck (drawPile, discardPile, revealedCards + all operations)
+  - [ ] GamePhase state machine (IDLE → JUDGE → DRAW → PLAY → DISCARD → END)
+  - [ ] GameMode strategy interface
+  - [ ] GameRoom (seats, deck, mode, currentPhase, currentSeatIndex)
 - [ ] Set up MockK and testing infrastructure
-- [ ] Write unit tests for core game logic (state machine, card effects, legal moves)
-- [ ] Write integration tests for REST API and WebSocket endpoints
 
-### AI Agent
-- [ ] Integrate Spring AI + Ollama as an AI player client
-- [ ] Write AI agent unit tests using Spring AI MockChatModel
-- [ ] Write behavioral/simulation tests for AI agent (local-only, Ollama)
-- [ ] Extract an AI agent module to a separate repo when the interfaces stabilize
+#### Frontend
+- [ ] Scaffold frontend project
+- [ ] Set up WebSocket client
+- [ ] Basic lobby UI (create / join room)
 
-### Model Training
-- [ ] Set up a model-training/ directory with PyTorch project structure
-- [ ] Implement game log export from a game server as training data
-- [ ] Train mini transformer (~100M–350M params) from scratch on game logs
+---
+
+### Iteration 1 — 1v1 Mode (first playable slice)
+
+#### Game Server
+- [ ] Implement OneVsOneMode
+  - [ ] Hero draft (28-hero pool, alternating picks, 3 fielded per player)
+  - [ ] Role assignment (Lord / Spy) and turn order
+  - [ ] Sequential hero replacement on death (draw 4 cards on entry)
+- [ ] Implement turn/phase state machine
+- [ ] Implement card effects (basic cards + standard trick cards)
+- [ ] REST API: room creation, join, game actions
+- [ ] Write unit tests for 1v1 game logic
+- [ ] Write integration tests for REST API and WebSocket
+
+#### AI Agent
+- [ ] Integrate Spring AI + Ollama as a 1v1 AI player client
+- [ ] Expose 1v1 game actions as Spring AI @Tool functions
+- [ ] Write unit tests using MockChatModel
+- [ ] Write behavioral tests: AI only makes legal moves in 1v1 (local-only)
+
+#### Model Training
+- [ ] Set up model-training/ directory with PyTorch project structure
+- [ ] Export 1v1 game logs as training data
+- [ ] Train mini transformer (~100M–350M params) on 1v1 game logs
+
+#### Frontend
+- [ ] 1v1 game board (seats, hand cards, hero display, HP)
+- [ ] Card play UI (select card, select target)
+- [ ] Hero draft UI (pool display, alternating pick flow)
+- [ ] Real-time game state sync via WebSocket
+- [ ] Game result screen
+
+---
+
+### Iteration 2 — Identity Mode
+
+#### Game Server
+- [ ] Implement IdentityMode (Lord / Loyalist / Rebel / Spy, hidden roles)
+  - [ ] Role assignment and reveal on death
+  - [ ] Kill reward / penalty rules
+- [ ] Scale turn state machine to 5–10 players
+- [ ] Write unit tests for identity mode logic
+
+#### AI Agent
+- [ ] Extend AI agent for identity mode (hidden role reasoning)
+- [ ] Write behavioral tests for identity mode (local-only)
+
+#### Model Training
 - [ ] Add RAG pipeline (card rules and game knowledge)
+- [ ] Collect and train on identity mode game logs
+
+#### Frontend
+- [ ] Identity mode role card UI (hidden / revealed)
+- [ ] Multi-player lobby (5–10 players)
+- [ ] Kill reward / death reveal animations
+
+---
+
+### Iteration 3 — Kingdom Mode
+
+#### Game Server
+- [ ] Implement KingdomMode (Wei / Shu / Wu / Qun, public allegiance)
+  - [ ] Dual-hero selection (main + sub general, faction matching)
+  - [ ] Special markers (先驱, 珠联璧合, 阴阳鱼)
+  - [ ] 鏖战 mode trigger
+- [ ] Write unit tests for kingdom mode logic
+
+#### AI Agent
+- [ ] Extend AI agent for kingdom mode (dual-hero skills, public allegiance)
+- [ ] Write behavioral tests for kingdom mode (local-only)
+
+#### Model Training
 - [ ] Fine-tune with LoRA/QLoRA on GTX 1070 Ti
-- [ ] Implement self-play reinforcement learning
-- [ ] Serve a trained model via Ollama and plug into an AI agent
-- [ ] Extract a model training module to a separate repo when the interfaces stabilize
+- [ ] Collect and train on kingdom mode game logs
+
+#### Frontend
+- [ ] Dual-hero UI (main / sub general, face-up / face-down state)
+- [ ] Faction and special marker display
+- [ ] 鏖战 mode visual indicator
+
+---
+
+### Iteration 4 — Hardening & Extraction
+
+#### Game Server
+- [ ] Implement ThreeVsThreeMode and DoudizhuMode
+- [ ] Write full scenario tests (deal → turns → win condition)
+
+#### AI Agent
+- [ ] Self-play reinforcement learning
+- [ ] Serve trained model via Ollama and plug into agent
+- [ ] Extract AI agent module to a separate repo
+
+#### Model Training
+- [ ] Extract model training module to a separate repo
+
+#### Frontend
+- [ ] 3v3 and Doudizhu mode UIs
+- [ ] Spectator mode
+- [ ] Polish (animations, sound effects, responsive layout)
