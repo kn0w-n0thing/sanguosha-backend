@@ -142,22 +142,37 @@ DEFENSIVE_HORSE  — others' attack range to you −1
 
 ### Seat
 ```
-Seat
+Seat                             — org.dogcard.model.seat
 ├── id: String
-├── seatIndex: Int               — position for distance calculation and turn order
+├── seatIndex: Int               — zero-based; used for distance calculation and turn order
 ├── handCards: List<Card>
 ├── judgmentArea: List<Card>     — delayed tricks pending resolution (乐不思蜀, 兵粮寸断, 闪电)
-├── heroes: List<Hero>           — one hero in standard modes; two in dual-hero mode (non-empty)
+├── heroes: List<Hero>           — non-empty; one in identity/1v1, two in Kingdom mode (国战)
+│                                  In 1v1 the list is a rotation queue; index 0 is on field
+├── hp: HpState                  — live HP; effective max computed by GameMode at seat-assembly
 └── allegiance: Allegiance       — sealed; GameMode assigns the right subtype at game start
 ```
 
+### HpState
+```
+HpState                          — org.dogcard.model.seat
+├── current: Int                 — current HP; 0 means dying (濒死)
+├── max: Int                     — effective HP cap (whole integer; fractions resolved before construction)
+│
+├── isDying: Boolean             — current == 0
+├── isFull: Boolean              — current == max
+└── lost: Int                    — max - current; 已损失体力值, used in skill conditions
+```
+
+> `HpState.full(HpValue)` constructs a full-health state from a hero's base HpValue.
+
 ### Hero
 ```
-Hero
-├── heroId: HeroId
+Hero                             — org.dogcard.model.hero
+├── heroId: HeroId               — @JvmInline value class wrapping String
 ├── gender: Gender               — MALE / FEMALE / NEUTRAL; affects some card/skill targeting
-├── hp: Int
-├── maxHp: Int
+├── maxHp: HpValue               — base HP from the card definition; may be X.5 in Kingdom mode
+│                                  Hero does not track current HP — that belongs to Seat.hp
 ├── skills: List<Skill>          — from hero definition
 ├── equipmentArea: EquipmentArea
 │   ├── weapon: Card?
@@ -165,24 +180,53 @@ Hero
 │   ├── offensiveHorse: Card?     — +1 attack range
 │   ├── defensiveHorse: Card?     — -1 attack range to opponents
 │   └── treasure: Card?           — e.g. 木牛流马, 玉玺
-└── specialArea: List<Card>?      — hero-specific cards (e.g. Zhuge's Qixing)
+└── specialArea: List<Card>?      — hero-specific cards (e.g. Zhuge Liang's 七星)
 ```
 
-> Hand cards and judgment area belong to the seat and are shared across heroes.
+> Hand cards and judgment area belong to the Seat and are shared across heroes.
+
+### HpValue
+```
+HpValue                          — org.dogcard.model.hero; @JvmInline value class
+├── halves: Int                  — internal storage in half-units (e.g. 5 → 2.5 HP)
+├── wholes: Int                  — floor(halves / 2); the integer HP for HpState
+└── hasHalf: Boolean             — true if a leftover half-fish remains after taking wholes
+```
+
+> Construction: `HpValue.of(3)` → 3 HP · `HpValue.ofHalf(5)` → 2.5 HP
+> In Kingdom mode: sum two heroes' HpValues; `wholes` becomes `HpState.max`; if `hasHalf` is true the leftover becomes an 阴阳鱼 marker on the seat.
 
 ### Gender
 ```
+Gender                           — org.dogcard.model.hero
 MALE / FEMALE / NEUTRAL
 ```
 
 ### Allegiance
 ```
-sealed Allegiance
-├── RoleBased(role: Role)            — IdentityMode (Lord/Loyalist/Rebel/Spy) / 1v1Mode (Lord/Spy) / DoudizhuMode
-├── KingdomBased(kingdom: Kingdom)   — KingdomMode
-├── TeamBased(teamId: String)        — 3v3Mode; opaque ID for now, typed Team added later
-└── None                             — reserved for modes with no identity
+sealed Allegiance                — org.dogcard.model.seat
+├── RoleBased(role: Role)        — IdentityMode (Lord/Loyalist/Rebel/Spy) / 1v1Mode (Lord/Spy) / DoudizhuMode
+├── KingdomBased(kingdom: Kingdom) — KingdomMode; set when first general is revealed (明置)
+├── TeamBased(teamId: String)    — 3v3Mode; opaque ID, typed Team added later
+└── Unrevealed                   — Kingdom mode only; seat's generals are still face-down (暗置)
 ```
+
+### Role
+```
+Role                             — org.dogcard.model.hero
+LORD / LOYALIST / REBEL / SPY
+```
+
+> Identity mode uses all four. 1v1 mode uses LORD and SPY only.
+
+### Kingdom
+```
+Kingdom                          — org.dogcard.model.hero
+WEI / SHU / WU / QUN
+```
+
+> Intrinsic attribute of the hero card itself; always known. Used across all modes.
+> The face-down state in Kingdom mode is modelled as `Allegiance.Unrevealed`, not here.
 
 ### GamePhase
 Represents the phases within a single player's turn:
