@@ -12,7 +12,7 @@ package org.dogcard.model.hero
  *
  * Combining two heroes' [HpValue]s to produce the seat's effective integer maxHp:
  * - Sum the halves of both heroes.
- * - [wholes] is the integer maxHp for [HpState].
+ * - [wholes] is the integer maxHp for [org.dogcard.model.seat.HpState].
  * - If [hasHalf] is true on the combined value, the leftover half becomes an
  *   阴阳鱼 marker on the seat (not extra HP).
  */

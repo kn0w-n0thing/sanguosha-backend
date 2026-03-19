@@ -1,4 +1,7 @@
-package org.dogcard.model.hero
+package org.dogcard.model.seat
+
+import org.dogcard.model.hero.Kingdom
+import org.dogcard.model.hero.Role
 
 /**
  * The allegiance a seat holds within a game session.

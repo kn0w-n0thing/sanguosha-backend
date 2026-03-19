@@ -8,7 +8,7 @@ package org.dogcard.model.hero
  * and used to resolve allegiance in Kingdom mode.
  *
  * The face-down / unrevealed state of a seat in Kingdom mode (暗将) is modelled
- * separately as [org.dogcard.model.hero.Allegiance.Unrevealed], not here.
+ * separately as [org.dogcard.model.seat.Allegiance.Unrevealed], not here.
  */
 enum class Kingdom {
     WEI,    // 魏

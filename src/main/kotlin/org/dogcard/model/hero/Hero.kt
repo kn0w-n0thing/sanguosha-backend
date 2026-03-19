@@ -5,7 +5,7 @@ import org.dogcard.model.card.Card
 /**
  * A single hero (武将) unit, representing the hero card definition.
  *
- * Hero does not track current HP — that is owned by the Seat via [HpState],
+ * Hero does not track current HP — that is owned by the Seat via [org.dogcard.model.seat.HpState],
  * because the effective max HP may depend on combining multiple heroes
  * (e.g. Kingdom mode 国战 half-fish calculation).
  *

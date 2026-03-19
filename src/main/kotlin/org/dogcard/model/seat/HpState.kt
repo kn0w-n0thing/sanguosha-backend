@@ -1,15 +1,17 @@
-package org.dogcard.model.hero
+package org.dogcard.model.seat
+
+import org.dogcard.model.hero.HpValue
 
 /**
  * The live HP state of a seat during a game.
  *
  * Both [current] and [max] are whole integers — fractions are resolved at the
- * seat-assembly step (see [HpValue]) before this is constructed.
+ * seat-assembly step (see [org.dogcard.model.hero.HpValue]) before this is constructed.
  *
  * @param current Current HP; 0 means the seat is dying (濒死).
  * @param max     Effective HP cap for this seat. In Kingdom mode this is derived
- *                from combining the two heroes' [HpValue]s; in other modes it
- *                equals the single hero's [HpValue.wholes].
+ *                from combining the two heroes' [org.dogcard.model.hero.HpValue]s; in other modes it
+ *                equals the single hero's [org.dogcard.model.hero.HpValue.wholes].
  */
 data class HpState(val current: Int, val max: Int) {
 
@@ -28,7 +30,7 @@ data class HpState(val current: Int, val max: Int) {
     val lost: Int get() = max - current
 
     companion object {
-        /** Construct a full-health [HpState] from a hero's base [HpValue]. */
+        /** Construct a full-health [HpState] from a hero's base [org.dogcard.model.hero.HpValue]. */
         fun full(value: HpValue) = HpState(current = value.wholes, max = value.wholes)
     }
 }
