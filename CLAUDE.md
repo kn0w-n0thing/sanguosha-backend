@@ -113,7 +113,7 @@ Start with 1v1 (simplest mode), then iterate to broader modes.
 - [x] Set up Spring Boot in build.gradle.kts
 - [x] Set up WebSocket support
 - [ ] Define core domain models
-  - [ ] Card + CardType / CardCategory / DamageType / EquipmentSlot enums
+  - [x] Card + CardType / CardCategory / DamageType / EquipmentSlot enums
   - [ ] Hero (heroId, gender, hp, maxHp, skills, equipmentArea, specialArea)
   - [ ] Seat (seatIndex, handCards, judgmentArea, heroes, allegiance)
   - [ ] Deck (drawPile, discardPile, revealedCards + all operations)

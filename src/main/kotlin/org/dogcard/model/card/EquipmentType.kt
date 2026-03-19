@@ -1,6 +1,6 @@
-package org.dogcard.model
+package org.dogcard.model.card
 
-enum class EquipmentSlot {
+enum class EquipmentType {
     WEAPON,
     ARMOR,
     OFFENSIVE_HORSE,  // your attack range +1
@@ -8,7 +8,7 @@ enum class EquipmentSlot {
 }
 
 /** The equipment slot this card occupies, or null if it is not an equipment card. */
-val CardType.equipmentSlot: EquipmentSlot?
+val CardType.equipmentType: EquipmentType?
     get() = when (this) {
         CardType.ZHUGE_CROSSBOW,
         CardType.VERMILION_BIRD_FAN,
@@ -21,20 +21,20 @@ val CardType.equipmentSlot: EquipmentSlot?
         CardType.QINGGANG_SWORD,
         CardType.SNAKE_SPEAR,
         CardType.GREEN_DRAGON_CRESCENT_BLADE,
-        CardType.HALBERD -> EquipmentSlot.WEAPON
+        CardType.HALBERD -> EquipmentType.WEAPON
 
         CardType.RATTAN_ARMOR,
         CardType.BENEVOLENT_SHIELD,
         CardType.SILVER_LION,
-        CardType.EIGHT_TRIGRAMS -> EquipmentSlot.ARMOR
+        CardType.EIGHT_TRIGRAMS -> EquipmentType.ARMOR
 
         CardType.CHITU,
         CardType.ZIXING,
-        CardType.DAYUAN -> EquipmentSlot.DEFENSIVE_HORSE
+        CardType.DAYUAN -> EquipmentType.DEFENSIVE_HORSE
 
         CardType.DILU,
         CardType.JUEYING,
-        CardType.ZHUHUANGFEIDIAN -> EquipmentSlot.OFFENSIVE_HORSE
+        CardType.ZHUHUANGFEIDIAN -> EquipmentType.OFFENSIVE_HORSE
 
         else -> null
     }

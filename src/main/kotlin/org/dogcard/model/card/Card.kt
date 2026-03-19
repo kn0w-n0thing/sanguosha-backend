@@ -1,4 +1,4 @@
-package org.dogcard.model
+package org.dogcard.model.card
 
 /**
  * A single physical game card.
@@ -17,7 +17,7 @@ data class Card(
     }
 
     val category: CardCategory get() = type.category
-    val equipmentSlot: EquipmentSlot? get() = type.equipmentSlot
+    val equipmentType: EquipmentType? get() = type.equipmentType
     val weaponRange: Int? get() = type.weaponRange
     val damageType: DamageType? get() = type.damageType
 

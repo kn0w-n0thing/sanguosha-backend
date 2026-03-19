@@ -1,4 +1,4 @@
-package org.dogcard.model
+package org.dogcard.model.card
 
 enum class CardType {
 
