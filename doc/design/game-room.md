@@ -28,9 +28,11 @@ GameRoom
 ├── seats: List<Seat>
 ├── deck: IDeck
 ├── mode: GameMode
-├── turnMachine: TurnStateMachine    — drives the active seat's turn
-└── currentSeatIndex: Int            — index into seats; advances counter-clockwise
+└── engine: TurnEngine               — owns the phase tape; drives all seats' turns
 ```
+
+`TurnEngine.tape` is the single source of truth for turn order and phase flow.
+`currentSeatIndex` is derived from `engine.current.seatIndex` at any point in time.
 
 ---
 
