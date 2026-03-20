@@ -11,9 +11,18 @@ Encapsulates all mode-specific logic. Swapped at room creation; core models are 
 
 ```
 GameMode
-├── assignAllegiances(seats: List<Seat>)       — called once at game start
-├── checkWinCondition(room: GameRoom): Winner? — called after every seat death and turn end
-└── onSeatDeath(dead: Seat, room: GameRoom)    — kill rewards, role reveals, hero swap, etc.
+├── assignAllegiances(seats: List<Seat>): List<Seat>  — called once at game start; returns updated copies
+├── checkWinCondition(room: IGameRoom): Winner?        — called after every seat death and turn end
+└── onSeatDeath(dead: Seat, room: IGameRoom)           — kill rewards, role reveals, hero swap, etc.
+```
+
+`GameMode` receives `IGameRoom` (not `GameRoom`) to stay free of game-layer dependencies.
+
+```
+IGameRoom
+├── seats: List<Seat>    — read-only view
+├── deck: IDeck
+└── updateSeat(seat)     — replace seat in list by seatIndex
 ```
 
 ---
