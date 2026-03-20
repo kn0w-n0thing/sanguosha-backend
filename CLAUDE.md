@@ -114,15 +114,16 @@ The frontend is a CLI client (not a UI) — connects to the game server via WebS
 #### Game Server
 - [x] Set up Spring Boot in build.gradle.kts
 - [x] Set up WebSocket support
-- [ ] Define core domain models
+- [x] Define core domain models
   - [x] Card + CardType / CardCategory / DamageType / EquipmentSlot enums
-  - [ ] Hero (heroId, gender, hp, maxHp, skills, equipmentArea, specialArea)
-  - [ ] Seat (seatIndex, handCards, judgmentArea, heroes, allegiance)
-  - [ ] Deck (drawPile, discardPile, revealedCards + all operations)
-  - [ ] GamePhase state machine (IDLE → JUDGE → DRAW → PLAY → DISCARD → END)
-  - [ ] GameMode strategy interface
-  - [ ] GameRoom (seats, deck, mode, currentPhase, currentSeatIndex)
-- [ ] Set up MockK and testing infrastructure
+  - [x] Hero (heroId, gender, maxHp, skills, equipmentArea, specialArea)
+  - [x] Seat (seatIndex, handCards, judgmentArea, heroes, hp, allegiance)
+  - [x] Deck (drawPile, discardPile, revealedCards + all operations)
+  - [x] GamePhase + phase tape model (PhaseCell, TurnEngine, TurnControl, PhaseHook)
+  - [x] GameMode strategy interface + IGameRoom
+  - [x] GameRoom (seats, deck, mode, engine)
+  - [x] OneVsOneMode (role assignment, hero rotation on death)
+- [x] Set up MockK and testing infrastructure (mockk in build.gradle.kts)
 
 #### CLI Frontend
 - [ ] Scaffold CLI frontend project (cli-client/)
@@ -133,32 +134,49 @@ The frontend is a CLI client (not a UI) — connects to the game server via WebS
 
 ### Iteration 1 — 1v1 Mode (first playable slice)
 
+Approach: minimal slice first (blank heroes + ATTACK/DODGE only), then grow incrementally.
+Detailed design: see `doc/design/plan-minimal-1v1.md`.
+
 #### Game Server
-- [ ] Implement OneVsOneMode
-  - [ ] Hero draft (28-hero pool, alternating picks, 3 fielded per player)
-  - [ ] Role assignment (Lord / Spy) and turn order
-  - [ ] Sequential hero replacement on death (draw 4 cards on entry)
-- [ ] Implement turn/phase state machine
-- [ ] Implement card effects (basic cards + standard trick cards)
-- [ ] REST API: room creation, join, game actions
-- [ ] Write unit tests for 1v1 game logic
-- [ ] Write integration tests for REST API and WebSocket
+- [ ] Bug fixes
+  - [ ] `Seat.init`: remove `require(heroes.isNotEmpty())` — empty list = eliminated
+  - [ ] `OneVsOneMode.onSeatDeath`: update seat with `emptyList()` when last hero falls
+- [ ] model/action: `GameAction`, `GameEvent`, `PendingRequest`, `SeatView`
+- [ ] `game/engine/GameEngine` — action processor + phase driver + attack→dodge interrupt
+- [ ] `game/factory/GameRoomFactory` — builds minimal 1v1 room (blank heroes, growing card pool)
+- [ ] `game/log/GameLogger` — JSONL (state, action) log for training data
+- [ ] REST API + WebSocket
+  - [ ] `POST /rooms`, `POST /rooms/{id}/join`, `POST /rooms/{id}/start`
+  - [ ] `POST /rooms/{id}/actions` — submit GameAction
+  - [ ] `WS /ws/game/{roomId}` — broadcast GameEvent
+- [ ] Unit tests for GameEngine (pure logic, no Spring)
+- [ ] Integration test: full game via scripted MockChatModel (AI vs AI, deterministic)
+- Card pool (grows as effects are implemented; lives in `GameRoomFactory.currentCardPool`)
+  - [x] ATTACK, DODGE
+  - [ ] PEACH
+  - [ ] DUEL, BARBARIAN_INVASION, HAIL_OF_ARROWS
+  - [ ] Equipment (weapons, armor, horses)
+  - [ ] Full standard deck
+- Hero roster (blank heroes → real heroes; swap in `GameRoomFactory`)
+  - [ ] Hero draft (28-hero pool, alternating picks, 3 per player)
+  - [ ] Hero skills (implement per hero; register PhaseHooks into TurnEngine)
 
 #### AI Agent
-- [ ] Integrate Spring AI + Ollama as a 1v1 AI player client
-- [ ] Expose 1v1 game actions as Spring AI @Tool functions
-- [ ] Write unit tests using MockChatModel
-- [ ] Write behavioral tests: AI only makes legal moves in 1v1 (local-only)
+- [ ] `ai-agent/` submodule scaffold (Spring Boot + Spring AI + Ollama)
+- [ ] `GameClientService` — WS + REST client, maintains local game state
+- [ ] `GameTools` — `@Tool` functions: playAttack, dodge, pass, endPlayPhase
+- [ ] `AiDecisionService` — ChatClient loop: state → prompt → action
+- [ ] Unit tests using MockChatModel
+- [ ] Behavioral tests: AI only makes legal moves (local-only, Ollama)
 
 #### Model Training
-- [ ] Set up model-training/ directory with PyTorch project structure
-- [ ] Export 1v1 game logs as training data
+- [ ] Set up `model-training/` directory with PyTorch project structure
+- [ ] Parse `GameLogger` JSONL → HuggingFace Dataset
 - [ ] Train mini transformer (~100M–350M params) on 1v1 game logs
 
 #### CLI Frontend
 - [ ] 1v1 game board rendering (seats, hand cards, hero, HP as text)
 - [ ] Card play commands (select card, select target by index)
-- [ ] Hero draft commands (list pool, pick by index)
 - [ ] Real-time game state sync via WebSocket
 - [ ] Game result output
 
