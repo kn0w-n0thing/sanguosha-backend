@@ -9,6 +9,7 @@ This project is the backend of the sanguosha game, providing the server-side log
 ### Code Structure
 - `doc/`            - Documentation for the project
 - `src/`            - Spring Boot 4 game server (Kotlin)
+- `cli-client/`     - CLI frontend (Kotlin) — connects via WebSocket, renders game state as text
 - `ai-agent/`       - Spring AI agent module (Kotlin) — extracted to separate repo when stable
 - `model-training/` - Mini model training pipeline (Python + PyTorch) — extracted to separate repo when stable
 
@@ -102,8 +103,9 @@ Game Server → generates game logs
 
 ## TODOS
 
-Each iteration delivers a playable end-to-end slice: game server + AI agent + model training + frontend.
+Each iteration delivers a playable end-to-end slice: game server + AI agent + model training + CLI frontend.
 Start with 1v1 (simplest mode), then iterate to broader modes.
+The frontend is a CLI client (not a UI) — connects to the game server via WebSocket and renders game state as text.
 
 ---
 
@@ -122,10 +124,10 @@ Start with 1v1 (simplest mode), then iterate to broader modes.
   - [ ] GameRoom (seats, deck, mode, currentPhase, currentSeatIndex)
 - [ ] Set up MockK and testing infrastructure
 
-#### Frontend
-- [ ] Scaffold frontend project
+#### CLI Frontend
+- [ ] Scaffold CLI frontend project (cli-client/)
 - [ ] Set up WebSocket client
-- [ ] Basic lobby UI (create / join room)
+- [ ] Basic lobby commands (create / join room)
 
 ---
 
@@ -153,12 +155,12 @@ Start with 1v1 (simplest mode), then iterate to broader modes.
 - [ ] Export 1v1 game logs as training data
 - [ ] Train mini transformer (~100M–350M params) on 1v1 game logs
 
-#### Frontend
-- [ ] 1v1 game board (seats, hand cards, hero display, HP)
-- [ ] Card play UI (select card, select target)
-- [ ] Hero draft UI (pool display, alternating pick flow)
+#### CLI Frontend
+- [ ] 1v1 game board rendering (seats, hand cards, hero, HP as text)
+- [ ] Card play commands (select card, select target by index)
+- [ ] Hero draft commands (list pool, pick by index)
 - [ ] Real-time game state sync via WebSocket
-- [ ] Game result screen
+- [ ] Game result output
 
 ---
 
@@ -179,10 +181,10 @@ Start with 1v1 (simplest mode), then iterate to broader modes.
 - [ ] Add RAG pipeline (card rules and game knowledge)
 - [ ] Collect and train on identity mode game logs
 
-#### Frontend
-- [ ] Identity mode role card UI (hidden / revealed)
-- [ ] Multi-player lobby (5–10 players)
-- [ ] Kill reward / death reveal animations
+#### CLI Frontend
+- [ ] Identity mode role display (hidden / revealed)
+- [ ] Multi-player lobby commands (5–10 players)
+- [ ] Kill reward / death reveal output
 
 ---
 
@@ -203,10 +205,10 @@ Start with 1v1 (simplest mode), then iterate to broader modes.
 - [ ] Fine-tune with LoRA/QLoRA on GTX 1070 Ti
 - [ ] Collect and train on kingdom mode game logs
 
-#### Frontend
-- [ ] Dual-hero UI (main / sub general, face-up / face-down state)
-- [ ] Faction and special marker display
-- [ ] 鏖战 mode visual indicator
+#### CLI Frontend
+- [ ] Dual-hero display (main / sub general, face-up / face-down state)
+- [ ] Faction and special marker output
+- [ ] 鏖战 mode indicator
 
 ---
 
@@ -224,7 +226,7 @@ Start with 1v1 (simplest mode), then iterate to broader modes.
 #### Model Training
 - [ ] Extract model training module to a separate repo
 
-#### Frontend
-- [ ] 3v3 and Doudizhu mode UIs
-- [ ] Spectator mode
-- [ ] Polish (animations, sound effects, responsive layout)
+#### CLI Frontend
+- [ ] 3v3 and Doudizhu mode commands
+- [ ] Spectator mode (read-only output)
+- [ ] Polish (consistent text layout, colorized output)
