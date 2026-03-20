@@ -1,11 +1,8 @@
 package org.dogcard.model.hero
 
-/**
- * Marker interface for all hero skills.
- *
- * Concrete skill implementations (active, passive, locked, limited, etc.)
- * will extend this interface in a later iteration.
- */
+import org.dogcard.model.turn.PhaseHook
+
 interface Skill {
     val name: String
+    val hooks: List<PhaseHook> get() = emptyList()
 }
