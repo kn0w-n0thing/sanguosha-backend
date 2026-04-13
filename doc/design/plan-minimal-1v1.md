@@ -33,7 +33,8 @@ Each turn for the active seat runs through these phases in order.
 - **Draw** — deal 2 cards to the active seat, then auto-advance
 - **Play** — wait for the player: `PlayAttack` or `EndPlayPhase`
   - `PlayAttack` opens a response window: the target must `RespondWithDodge` or `Pass`
-  - After the response resolves, the active player may act again (but can play at most one ATTACK per turn in minimal slice)
+  - After the response resolves, the active player may act again (but can play at most one ATTACK per turn in this slice)
+  - **v1 scope: ATTACK and DODGE only.** Other card types are added incrementally after the AI agent runs successfully (see Card Expansion below)
 - **Discard** — auto-discard excess cards down to hand limit (= current HP), then auto-advance
 - **End** — advance turn to the next seat; their Judge phase begins
 
@@ -126,16 +127,14 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 ### Step 1 — Start a game room
 
 **`GameRoomFactoryTest`**
-- [ ] factory creates a room with 2 seats
-- [ ] each seat has 3 blank heroes
-- [ ] each hero has 4 HP
-- [ ] seats start at full HP
-- [ ] card pool contains only ATTACK and DODGE
-- [ ] seats start in Unknown allegiance before game start
-- [ ] seat indices match list order
-- [ ] seats start with empty hand
-- [ ] factory rejects fewer than 2 players
-- [ ] factory rejects more than 2 players
+- [x] factory creates a room with 2 seats
+- [x] each seat has 3 blank heroes
+- [x] each hero has 4 HP
+- [x] seats start at full HP
+- [x] card pool contains only ATTACK and DODGE
+- [x] seats start in Unknown allegiance before the game starts
+- [x] seat indices match list order
+- [x] seats start with empty hand
 
 **`GameSessionStartTest`**
 - [ ] start assigns seat 0 as LORD
@@ -161,7 +160,7 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 
 ---
 
-### Step 3 — Play cards
+### Step 3 — Play cards (v1: ATTACK + DODGE only)
 
 **`GameSessionPlayTest`** — attack
 - [ ] PlayAttack with ATTACK card emits AttackPlayed and ResponseRequested
@@ -218,6 +217,42 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 **`GameSessionSeamTest`** (scripted MockChatModel — acceptance gate)
 - [ ] full AI vs AI game completes from start to GameOver without any illegal action errors
 - [ ] GameLogger produces a non-empty JSONL file after the game
+
+---
+
+### Card Expansion (after AI agent runs successfully)
+
+Each card is added in its own increment: implement the effect, add its test, expand the card pool.
+The AI agent does not need to be paused — it simply gains new legal actions as each card lands.
+
+- [ ] **PEACH** — heal 1 HP (only playable during Play phase, only when not at full HP)
+- [ ] **Weapons** — equip slot; each weapon adds a unique attack rule (e.g. range, extra effect)
+- [ ] **Armor** — equip slot; each armor adds a passive defensive rule
+- [ ] **Defensive horses** — +1 distance to self (harder to be targeted)
+- [ ] **Offensive horses** — -1 distance to self (easier to reach targets)
+Instant tricks — AOE:
+- [ ] **BARBARIAN_INVASION (南蛮入侵)** — all other players must play ATTACK or take 1 damage
+- [ ] **HAIL_OF_ARROWS (万箭齐发)** — all other players must play DODGE or take 1 damage
+- [ ] **PEACH_GARDEN_OATH (桃园结义)** — every living player recovers 1 HP
+
+Instant tricks — targeting:
+- [ ] **DUEL (决斗)** — both players alternate playing ATTACK until one cannot; loser takes 1 damage
+- [ ] **BORROW_SWORD (借刀杀人)** — force weapon-equipped target to Attack another; refuse → lose weapon
+- [ ] **DISMANTLE (过河拆桥)** — discard one card from target's hand, equipment, or judgment area
+- [ ] **STEAL (顺手牵羊)** — take one card from an adjacent player into your hand
+
+Instant tricks — self / draw:
+- [ ] **SOMETHING_FROM_NOTHING (无中生有)** — draw 2 cards
+- [ ] **BOUNTIFUL_HARVEST (五谷丰登)** — reveal N cards from deck; each player picks one in turn order
+
+Instant tricks — response:
+- [ ] **NEGATE (无懈可击)** — cancel the effect of one trick card on one target; can chain-counter
+
+Delayed tricks (resolved during Judge phase):
+- [ ] **ECSTASY (乐不思蜀)** — skip Play phase if judgment is not ♥
+- [ ] **LIGHTNING (闪电)** — deal 3 thunder damage if judgment is ♠2–9; otherwise pass to next player
+
+- [ ] Full standard deck (replace `currentCardPool` filter with `StandardCards` directly)
 
 ---
 

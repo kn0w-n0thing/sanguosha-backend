@@ -15,7 +15,6 @@ For mode rules, see [`../rules.md`](../rules.md).
                         │   owns ──► TurnEngine    (phase tape)        │
                         │   owns ──► GameRoom                         │
                         │              │                               │
-                        │              ├── id: String                  │
                         │              ├── mode: GameMode              │
                         │              └── seats: List<Seat>           │
                         └──────────────────────────────────────────────┘
@@ -49,11 +48,11 @@ This keeps `GameMode` a pure function on `Seat` data — no session or deck depe
 
 ## GameRoom
 
-Pure data aggregate. Holds the room identity, mode strategy, and seat list. No runtime components.
+Pure data aggregate. Holds mode strategy and seat list. No id, no runtime components.
+The session id lives in `GameSession`, assigned by the API layer when a session is created.
 
 ```
 GameRoom
-├── id: String
 ├── mode: GameMode
 └── seats: List<Seat>    — mutable; updated via updateSeat(seat)
 ```
@@ -82,6 +81,7 @@ Orchestrates a full game session. The single entry point for all external intera
 
 ```
 GameSession
+├── id: String              — assigned by the API layer when the session is created
 ├── room: GameRoom
 ├── deck: IDeck
 ├── engine: TurnEngine
