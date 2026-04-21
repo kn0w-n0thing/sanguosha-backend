@@ -137,14 +137,19 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 - [x] seats start with empty hand
 
 **`GameSessionStartTest`**
-- [ ] start assigns seat 0 as LORD
-- [ ] start assigns seat 1 as SPY
-- [ ] start deals 4 cards to each seat
-- [ ] start emits GameStarted as first event with firstSeatIndex=0
+- [x] after start, exactly one seat has LORD allegiance
+- [x] after start, exactly one seat has SPY allegiance
+- [x] after start, no seat has Unknown allegiance
+- [x] allegiance assignment is not always the same order (Random injection, two seeds produce different results)
+- [x] after start, each seat has 4 cards in hand
+- [x] after start, deck size decreased by 8 (4 cards × 2 seats)
+- [x] start enters Judge phase for the SPY seat
+- [x] start cannot be called twice
+
+**`GameSessionEventTest`**
+- [ ] start emits GameStarted as the first event with firstSeatIndex = SPY's seat index
 - [ ] GameStarted seatViews reflect correct HP and hand count
 - [ ] start emits HandUpdated for each seat with 4 cards
-- [ ] start enters Judge phase for seat 0
-- [ ] start cannot be called twice
 
 ---
 

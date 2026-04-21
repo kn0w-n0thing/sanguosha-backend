@@ -4,7 +4,7 @@ import org.dogcard.model.seat.Seat
 
 interface GameMode {
     val heroEntryDrawCount: Int
-    fun assignAllegiances(seats: List<Seat>): List<Seat>
+    fun assignAllegiances(seats: List<Seat>, random: kotlin.random.Random = kotlin.random.Random): List<Seat>
     fun checkWinCondition(seats: List<Seat>): Winner?
     fun onSeatDeath(dead: Seat, seats: List<Seat>): Seat
 }

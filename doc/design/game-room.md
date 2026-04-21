@@ -34,10 +34,10 @@ Encapsulates all mode-specific logic. Swapped at room creation; no other code ch
 
 ```
 GameMode
-├── assignAllegiances(seats): List<Seat>   — called once at game start
-├── checkWinCondition(seats): Winner?      — called after every death and turn end
-├── onSeatDeath(dead): Seat                — returns updated seat; no deck access
-└── heroEntryDrawCount: Int                — cards drawn when next hero enters (default 0)
+├── assignAllegiances(seats, random): List<Seat>   — called once at game start; random injected for testability
+├── checkWinCondition(seats): Winner?              — called after every death and turn end
+├── onSeatDeath(dead): Seat                        — returns updated seat; no deck access
+└── heroEntryDrawCount: Int                        — cards drawn when next hero enters (default 0)
 ```
 
 `onSeatDeath` returns the updated `Seat` with an empty hand.
