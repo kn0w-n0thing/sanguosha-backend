@@ -42,17 +42,17 @@ val CardType.equipmentType: EquipmentType?
 /** Attack range granted by this weapon, or null if not a weapon. */
 val CardType.weaponRange: Int?
     get() = when (this) {
-        CardType.ZHUGE_CROSSBOW              -> 1
-        CardType.VERMILION_BIRD_FAN          -> 4
-        CardType.BOULDER_AXE                 -> 3
-        CardType.WU_SIX_SWORD               -> 2
-        CardType.THREE_POINTED_BLADE         -> 3
-        CardType.QILIN_BOW                   -> 5
-        CardType.GENDER_SWORDS               -> 2
-        CardType.ICE_SWORD                   -> 2
-        CardType.QINGGANG_SWORD              -> 2
-        CardType.SNAKE_SPEAR                 -> 3
+        CardType.ZHUGE_CROSSBOW -> 1
+        CardType.VERMILION_BIRD_FAN -> 4
+        CardType.BOULDER_AXE -> 3
+        CardType.WU_SIX_SWORD -> 2
+        CardType.THREE_POINTED_BLADE -> 3
+        CardType.QILIN_BOW -> 5
+        CardType.GENDER_SWORDS -> 2
+        CardType.ICE_SWORD -> 2
+        CardType.QINGGANG_SWORD -> 2
+        CardType.SNAKE_SPEAR -> 3
         CardType.GREEN_DRAGON_CRESCENT_BLADE -> 3
-        CardType.HALBERD                     -> 4
-        else                                 -> null
+        CardType.HALBERD -> 4
+        else -> null
     }

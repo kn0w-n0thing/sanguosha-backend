@@ -16,7 +16,7 @@ import org.dogcard.model.hero.HpValue
 data class HpState(val current: Int, val max: Int) {
 
     init {
-        require(max > 0)           { "max must be positive, got $max" }
+        require(max > 0) { "max must be positive, got $max" }
         require(current in 0..max) { "current must be in 0..$max, got $current" }
     }
 

@@ -9,8 +9,8 @@ enum class DamageType {
 /** The damage type an attack card produces, or null for non-attack cards. */
 val CardType.damageType: DamageType?
     get() = when (this) {
-        CardType.ATTACK        -> DamageType.NORMAL
-        CardType.FIRE_ATTACK   -> DamageType.FIRE
+        CardType.ATTACK -> DamageType.NORMAL
+        CardType.FIRE_ATTACK -> DamageType.FIRE
         CardType.THUNDER_ATTACK -> DamageType.THUNDER
-        else                   -> null
+        else -> null
     }

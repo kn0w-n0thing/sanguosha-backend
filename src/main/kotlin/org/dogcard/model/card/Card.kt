@@ -24,16 +24,16 @@ data class Card(
     override fun toString(): String {
         val name = CardType.chineseNames[type] ?: type.name
         val suitSymbol = when (suit) {
-            Suit.SPADE   -> "♠"
-            Suit.HEART   -> "♥"
-            Suit.CLUB    -> "♣"
+            Suit.SPADE -> "♠"
+            Suit.HEART -> "♥"
+            Suit.CLUB -> "♣"
             Suit.DIAMOND -> "♦"
         }
         val rank = when (number) {
-            1    -> "A"
-            11   -> "J"
-            12   -> "Q"
-            13   -> "K"
+            1 -> "A"
+            11 -> "J"
+            12 -> "Q"
+            13 -> "K"
             else -> number.toString()
         }
         return "($suitSymbol$rank)$name"

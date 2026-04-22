@@ -1,8 +1,8 @@
 package org.dogcard.game.mode
 
-import org.dogcard.model.hero.Role
 import org.dogcard.model.game.GameMode
 import org.dogcard.model.game.Winner
+import org.dogcard.model.hero.Role
 import org.dogcard.model.seat.Allegiance
 import org.dogcard.model.seat.Seat
 

@@ -17,8 +17,8 @@ import org.dogcard.model.deck.IDeck
  */
 class StandardDeck(cards: List<Card>) : IDeck {
 
-    private val drawPile:     ArrayDeque<Card> = ArrayDeque(cards)
-    private val discardPile:  MutableList<Card> = mutableListOf()
+    private val drawPile: ArrayDeque<Card> = ArrayDeque(cards)
+    private val discardPile: MutableList<Card> = mutableListOf()
     private val revealedZone: MutableList<Card> = mutableListOf()
 
     override val remaining: Int get() = drawPile.size
