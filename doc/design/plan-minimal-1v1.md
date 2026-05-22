@@ -53,9 +53,8 @@ Each turn for the active seat runs through these phases in order.
   Currently one subtype: `RespondToAttack` (attacker, target, attack card).
   While set, only the target may submit actions.
 
-- **`GameEvent`** — sealed class of server-to-client notifications:
-  `GameStarted`, `PhaseChanged`, `CardsDrawn`, `HandUpdated`, `AttackPlayed`,
-  `ResponseRequested`, `DodgePlayed`, `DamageDealt`, `HeroRotated`, `GameOver`
+- **`GameEvent`** — sealed class of server-to-client notifications.
+  See [`game-events.md`](game-events.md) for full event list and field definitions.
 
 - **`SeatView`** — public snapshot of one seat (HP, hand count, hero id).
   `cards` field is non-null only for the owning seat's private view.
