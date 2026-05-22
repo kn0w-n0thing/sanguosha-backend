@@ -157,29 +157,30 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 ### Step 2 — Deal / Draw cards
 
 **`GameSessionDrawTest`**
-- [ ] Judge phase auto-advances when judgment area is empty
-- [ ] Draw phase deals 2 cards to the active seat
-- [ ] deck size decreases by 2 after draw
-- [ ] CardsDrawn event emitted with correct seatIndex and count
-- [ ] HandUpdated emitted with hand grown from 4 to 6
-- [ ] after Draw phase, current phase is Play
+- [x] Judge phase auto-advances when judgment area is empty
+- [x] Draw phase deals 2 cards to the active seat
+- [x] deck size decreases by 2 after draw
+- [x] after Draw phase, current phase is Play
+
+**`GameSessionEventTest`** *(continued)*
+- [x] CardsDrawn event emitted with correct seatIndex and 2 cards
+- [x] CardsDrawn cards are identical to the new cards added to hand
+- [x] HandUpdated emitted with hand grown from 4 to 6
 
 ---
 
 ### Step 3 — Play cards (v1: ATTACK + DODGE only)
 
 **`GameSessionPlayTest`** — attack
-- [ ] PlayAttack with ATTACK card emits AttackPlayed and ResponseRequested
 - [ ] pendingRequest is set after PlayAttack
 - [ ] PlayAttack with a non-ATTACK card returns an error
 - [ ] PlayAttack submitted by the non-active seat returns an error
 - [ ] PlayAttack submitted while pendingRequest is already set returns an error
 
 **`GameSessionPlayTest`** — response window
-- [ ] RespondWithDodge from the target emits DodgePlayed and clears pendingRequest
+- [ ] RespondWithDodge clears pendingRequest
 - [ ] RespondWithDodge with a non-DODGE card returns an error
 - [ ] RespondWithDodge submitted by the wrong seat returns an error
-- [ ] Pass from the target emits DamageDealt with amount=1 and correct newHp
 - [ ] Pass clears pendingRequest
 
 **`GameSessionPlayTest`** — end turn
@@ -189,20 +190,27 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 - [ ] Discard phase auto-discards excess cards down to hand limit (= current HP)
 - [ ] End phase starts the next seat's turn at Judge phase
 
+**`GameSessionEventTest`** *(continued)*
+- [ ] PlayAttack emits AttackPlayed and ResponseRequested
+- [ ] RespondWithDodge emits DodgePlayed
+- [ ] Pass emits DamageDealt with amount=1 and correct newHp
+
 ---
 
 ### Step 4 — Game over
 
 **`GameSessionDeathTest`**
-- [ ] when HP drops to 0 and remaining heroes exist, HeroRotated is emitted
 - [ ] rotated hero enters with full HP
 - [ ] GameSession draws heroEntryDrawCount entry cards after rotation
-- [ ] HandUpdated is emitted after hero rotation
 - [ ] when HP drops to 0 and no remaining heroes, seat heroes becomes empty
 - [ ] checkWinCondition identifies the correct winner after elimination
-- [ ] GameOver is emitted with the correct winnerSeatIndex
 - [ ] isOver is true after game ends
 - [ ] submitAction after game over returns an error
+
+**`GameSessionEventTest`** *(continued)*
+- [ ] HeroRotated is emitted when HP drops to 0 and remaining heroes exist
+- [ ] HandUpdated is emitted after hero rotation
+- [ ] GameOver is emitted with the correct winnerSeatIndex
 
 ---
 

@@ -11,6 +11,7 @@ import org.dogcard.model.turn.GamePhase
 import kotlin.random.Random
 
 private const val INITIAL_HAND_SIZE = 4
+private const val DRAW_COUNT = 2
 
 class GameSession(
     private val setup: GameSetup,
@@ -43,5 +44,27 @@ class GameSession(
         _seats.forEach { seat ->
             onEvent(GameEvent.HandUpdated(seatIndex = seat.seatIndex, cards = seat.handCards))
         }
+    }
+
+    fun advancePhase() {
+        when (currentPhase) {
+            GamePhase.Judge -> advanceJudgePhase()
+            GamePhase.Draw  -> advanceDrawPhase()
+            else            -> {}
+        }
+    }
+
+    private fun advanceJudgePhase() {
+        currentPhase = GamePhase.Draw
+    }
+
+    private fun advanceDrawPhase() {
+        val seatIndex = currentSeatIndex!!
+        val drawn = setup.deck.draw(DRAW_COUNT)
+        val updatedSeat = _seats[seatIndex].copy(handCards = _seats[seatIndex].handCards + drawn)
+        _seats = _seats.mapIndexed { i, seat -> if (i == seatIndex) updatedSeat else seat }
+        currentPhase = GamePhase.Play
+        onEvent(GameEvent.CardsDrawn(seatIndex = seatIndex, cards = drawn))
+        onEvent(GameEvent.HandUpdated(seatIndex = seatIndex, cards = updatedSeat.handCards))
     }
 }

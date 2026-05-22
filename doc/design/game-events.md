@@ -35,10 +35,10 @@ Emitted each time the active phase or active seat changes.
 ### `CardsDrawn`
 Emitted after a seat draws cards during the Draw phase.
 
-| Field       | Type  | Description              |
-|-------------|-------|--------------------------|
-| `seatIndex` | `Int` | Seat that drew           |
-| `count`     | `Int` | Number of cards drawn    |
+| Field       | Type         | Description                                   |
+|-------------|--------------|-----------------------------------------------|
+| `seatIndex` | `Int`        | Seat that drew                                |
+| `cards`     | `List<Card>` | The exact cards drawn (count = `cards.size`)  |
 
 ### `AttackPlayed`
 Emitted when a seat plays an ATTACK card targeting another seat.

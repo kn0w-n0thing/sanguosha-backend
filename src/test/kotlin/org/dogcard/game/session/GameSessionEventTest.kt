@@ -27,6 +27,49 @@ class GameSessionEventTest {
     }
 
     @Test
+    fun `HandUpdated emitted with hand grown from 4 to 6`() {
+        val events = mutableListOf<GameEvent>()
+        val session = GameSession(factory.create1v1Setup(), random = Random(seed = 0), onEvent = { events += it })
+        session.start()
+        val activeSeatIndex = session.currentSeatIndex!!
+        events.clear()
+        session.advancePhase() // Judge → Draw
+        session.advancePhase() // Draw → Play, should emit HandUpdated
+        val handUpdated = events.filterIsInstance<GameEvent.HandUpdated>()
+            .first { it.seatIndex == activeSeatIndex }
+        assertEquals(6, handUpdated.cards.size)
+    }
+
+    @Test
+    fun `CardsDrawn event emitted with correct seatIndex and 2 cards`() {
+        val events = mutableListOf<GameEvent>()
+        val session = GameSession(factory.create1v1Setup(), random = Random(seed = 0), onEvent = { events += it })
+        session.start()
+        val activeSeatIndex = session.currentSeatIndex!!
+        session.advancePhase() // Judge → Draw
+        session.advancePhase() // Draw → Play, emits CardsDrawn
+        val cardsDrawn = events.filterIsInstance<GameEvent.CardsDrawn>().first()
+        assertEquals(activeSeatIndex, cardsDrawn.seatIndex)
+        assertEquals(2, cardsDrawn.cards.size)
+    }
+
+    @Test
+    fun `CardsDrawn cards are identical to the new cards added to hand`() {
+        val events = mutableListOf<GameEvent>()
+        val session = GameSession(factory.create1v1Setup(), random = Random(seed = 0), onEvent = { events += it })
+        session.start()
+        val activeSeatIndex = session.currentSeatIndex!!
+        val handBefore = session.seats[activeSeatIndex].handCards.toList()
+        events.clear()
+        session.advancePhase() // Judge → Draw
+        session.advancePhase() // Draw → Play
+        val cardsDrawn = events.filterIsInstance<GameEvent.CardsDrawn>().first()
+        val handUpdated = events.filterIsInstance<GameEvent.HandUpdated>().first { it.seatIndex == activeSeatIndex }
+        val newCards = handUpdated.cards.drop(handBefore.size)
+        assertEquals(cardsDrawn.cards, newCards)
+    }
+
+    @Test
     fun `start emits GameStarted as the first event with firstSeatIndex = SPY's seat index`() {
         val events = mutableListOf<GameEvent>()
         val session = GameSession(factory.create1v1Setup(), random = Random(seed = 0), onEvent = { events += it })
