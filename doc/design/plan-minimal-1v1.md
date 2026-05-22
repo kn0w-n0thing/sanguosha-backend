@@ -15,12 +15,14 @@ Hand limit = current HP count (standard rule). Draw = 2 cards per turn.
 
 ## Bug Fix Required First
 
-`Seat.init` has `require(heroes.isNotEmpty())`, but `OneVsOneMode.checkWinCondition` checks
-`seat.heroes.isEmpty()` to detect elimination. These contradict each other.
+`OneVsOneMode.onSeatDeath` currently returns the dead seat unchanged. It must rotate the hero
+queue (`heroes.drop(1)`) and reset HP to the next hero's `maxHp`. When the last hero falls, it
+must return a seat with `heroes = emptyList()`.
 
-**Fix:** remove the `require` from `Seat.init`; document that an empty heroes list means eliminated.
-`OneVsOneMode.onSeatDeath` must update the seat with an empty heroes list when the last hero falls,
-so `checkWinCondition` can detect it.
+`OneVsOneMode.checkWinCondition` currently returns `null`. It must return a `Winner` pointing to
+the surviving seat when the opponent's `heroes` list is empty.
+
+An empty `heroes` list is the agreed signal for elimination — `Seat` has no guard against it.
 
 ---
 
@@ -265,35 +267,92 @@ Delayed tricks (resolved during Judge phase):
 
 ### Modify
 
-| File                          | Change                                                              |
-|-------------------------------|---------------------------------------------------------------------|
-| `model/seat/Seat.kt`          | Remove `require(heroes.isNotEmpty())`                               |
-| `model/seat/Allegiance.kt`    | Add `Unknown` subtype                                               |
-| `game/mode/OneVsOneMode.kt`   | `onSeatDeath` returns `Seat`; empty heroes list on last death       |
+| File                        | Change                                                                                                          |
+|-----------------------------|-----------------------------------------------------------------------------------------------------------------|
+| `game/mode/OneVsOneMode.kt` | `onSeatDeath`: rotate hero queue; empty list when last hero falls. `checkWinCondition`: return winner when any seat's heroes empty |
 
 ### Create (game server)
 
-| File                              | Purpose                                  |
-|-----------------------------------|------------------------------------------|
-| `model/action/GameAction.kt`      | Player intent protocol                   |
-| `model/action/PendingRequest.kt`  | Mid-turn interrupt state                 |
-| `model/action/GameEvent.kt`       | Server-to-client events                  |
-| `model/action/SeatView.kt`        | Public seat snapshot                     |
-| `model/game/GameMode.kt`          | Pure strategy interface                  |
-| `game/room/GameRoom.kt`           | Pure data aggregate (no deck, no engine) |
-| `game/session/GameSession.kt`     | Game orchestrator                        |
-| `game/factory/GameRoomFactory.kt` | Minimal 1v1 setup builder                |
-| `game/log/GameLogger.kt`          | JSONL game log for training              |
-| `api/RoomStore.kt`                | In-memory room registry                  |
-| `api/RoomController.kt`           | REST endpoints                           |
-| `api/GameWebSocketHandler.kt`     | WS event broadcast                       |
+| File                              | Status | Purpose                                   |
+|-----------------------------------|--------|-------------------------------------------|
+| `model/action/GameAction.kt`      | [ ]    | Player intent protocol                    |
+| `model/action/PendingRequest.kt`  | [ ]    | Mid-turn interrupt state                  |
+| `model/action/GameEvent.kt`       | [ ]    | Server-to-client events                   |
+| `model/action/SeatView.kt`        | [ ]    | Public seat snapshot                      |
+| `model/game/GameMode.kt`          | [x]    | Pure strategy interface                   |
+| `game/room/GameRoom.kt`           | [x]    | Pure data aggregate (no deck, no engine)  |
+| `game/session/GameSession.kt`     | [x]    | Game orchestrator (partial)               |
+| `game/factory/GameRoomFactory.kt` | [x]    | Minimal 1v1 setup builder                 |
+| `game/log/GameLogger.kt`          | [ ]    | JSONL game log for training               |
+| `api/RoomStore.kt`                | [ ]    | In-memory room registry                   |
+| `api/RoomController.kt`           | [ ]    | REST endpoints                            |
+| `api/GameWebSocketHandler.kt`     | [ ]    | WS event broadcast                        |
 
 ### Create (ai-agent submodule)
 
-| File                        | Purpose                                       |
-|-----------------------------|-----------------------------------------------|
-| `ai-agent/build.gradle.kts` | Submodule build (Spring AI + Ollama)          |
-| `AiAgentApplication.kt`     | Spring Boot entry point                       |
-| `GameClientService.kt`      | WS + REST client; maintains local game state  |
-| `GameTools.kt`              | Spring AI `@Tool` functions                   |
-| `AiDecisionService.kt`      | ChatClient loop: state → prompt → action      |
+| File                        | Status | Purpose                                      |
+|-----------------------------|--------|----------------------------------------------|
+| `ai-agent/build.gradle.kts` | [ ]    | Submodule build (Spring AI + Ollama)         |
+| `AiAgentApplication.kt`     | [ ]    | Spring Boot entry point                      |
+| `GameClientService.kt`      | [ ]    | WS + REST client; maintains local game state |
+| `GameTools.kt`              | [ ]    | Spring AI `@Tool` functions                  |
+| `AiDecisionService.kt`      | [ ]    | ChatClient loop: state → prompt → action     |
+
+---
+
+## WebSocket / REST API
+
+### Implementation
+- [ ] `api/RoomStore.kt` — in-memory `roomId → GameSession` map
+- [ ] `api/RoomController.kt`
+  - [ ] `POST /rooms` — create room, return `{ roomId }`
+  - [ ] `POST /rooms/{id}/join` — assign next free seat, return `{ seatIndex }`
+  - [ ] `POST /rooms/{id}/start` — start game, return 200
+  - [ ] `POST /rooms/{id}/actions` — submit `GameAction` as JSON, return 200 or 400 with error
+  - [ ] `GET /rooms/{id}/state` — return `GameStateView`
+- [ ] `api/GameWebSocketHandler.kt`
+  - [ ] Subscribe at `WS /ws/game/{roomId}`
+  - [ ] Broadcast all `GameEvent`s to every subscriber in the room
+  - [ ] Deliver `HandUpdated` only to the owning seat's connection
+
+Tests: see Step 5.
+
+---
+
+## CLI Frontend
+
+### Implementation
+- [ ] Scaffold `cli-client/` Kotlin project (`build.gradle.kts`, main entry point)
+- [ ] REST client — call `POST /rooms`, `/join`, `/start`, `/actions`
+- [ ] WebSocket client — subscribe to `/ws/game/{roomId}`, parse `GameEvent` JSON
+- [ ] 1v1 board renderer — display seats, current hero name, HP, hand card count as text
+- [ ] Hand display — show own cards with index (`[0] ATTACK ♠7  [1] DODGE ♥3`)
+- [ ] Input commands — `attack <seat>`, `dodge`, `pass`, `end` → post `GameAction` JSON
+- [ ] Real-time update — re-render board on each received `GameEvent`
+- [ ] Game result — print winner on `GameOver`
+
+---
+
+## AI Agent
+
+### Implementation
+- [ ] Scaffold `ai-agent/` Kotlin project (Spring Boot + Spring AI + Ollama in `build.gradle.kts`)
+- [ ] `GameClientService` — WebSocket listener + REST caller; maintains a local `GameStateView`
+- [ ] `GameTools` — Spring AI `@Tool` functions: `playAttack(targetSeatIndex)`, `respondWithDodge()`, `pass()`, `endPlayPhase()`
+- [ ] `AiDecisionService` — ChatClient loop: serialize `GameStateView` → prompt LLM → parse tool call → submit action
+
+### Tests
+- [ ] `AiDecisionServiceTest` (MockChatModel): scripted response → verify correct `GameAction` posted to REST
+- [ ] `GameToolsTest` (MockK): each `@Tool` function sends correct JSON to REST endpoint
+- [ ] `AiBehaviorTest` (`@Tag("local-only")`, Ollama): AI submits only legal moves across 10 live games
+
+---
+
+## Model Training
+
+### Implementation
+- [ ] Scaffold `model-training/` Python project (`pyproject.toml` or `requirements.txt`)
+- [ ] `parse_game_log.py` — read `GameLogger` JSONL, build `(state_tokens, action_label)` HuggingFace Dataset
+- [ ] `model.py` — mini transformer architecture (~100M–350M params, decoder-only)
+- [ ] `train.py` — cross-entropy training loop on next-action prediction; log to Weights & Biases
+- [ ] `evaluate.py` — top-k accuracy on held-out 1v1 game logs

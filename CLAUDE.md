@@ -51,7 +51,7 @@ Game Server → generates game logs
 #### Environments
 | Environment                            | Runtime               | Model                                                  |
 |----------------------------------------|-----------------------|--------------------------------------------------------|
-| Local Dev (i7-8700 + GTX 1070 Ti 8GB) | Ollama                | Qwen2.5-7B or DeepSeek-R1-Distill-7B (Q4, ~4GB VRAM) |
+| Local Dev (Ryzen AI 9 HX PRO 370 + Radeon 890M iGPU, 32 GB shared RAM) | Ollama | Qwen2.5-14B or DeepSeek-R1-Distill-14B (Q4, ~8–9 GB shared RAM) |
 | Production (Aliyun / AWS, no GPU)      | Claude API (Anthropic)| claude-haiku-4-5 (cost-effective)                      |
 
 #### AI Learning Progression
@@ -139,18 +139,13 @@ Detailed design: see `doc/design/plan-minimal-1v1.md`.
 
 #### Game Server
 - [ ] Bug fixes
-  - [ ] `Seat.init`: remove `require(heroes.isNotEmpty())` — empty list = eliminated
-  - [ ] `OneVsOneMode.onSeatDeath`: update seat with `emptyList()` when last hero falls
+  - [ ] `OneVsOneMode.onSeatDeath` — rotate hero queue; empty list when last hero falls
+  - [ ] `OneVsOneMode.checkWinCondition` — return winner when any seat's heroes list is empty
 - [ ] model/action: `GameAction`, `GameEvent`, `PendingRequest`, `SeatView`
 - [ ] `game/engine/GameEngine` — action processor + phase driver + attack→dodge interrupt
-- [ ] `game/factory/GameRoomFactory` — builds minimal 1v1 room (blank heroes, growing card pool)
+- [x] `game/factory/GameRoomFactory` — builds minimal 1v1 room (blank heroes, growing card pool)
 - [ ] `game/log/GameLogger` — JSONL (state, action) log for training data
-- [ ] REST API + WebSocket
-  - [ ] `POST /rooms`, `POST /rooms/{id}/join`, `POST /rooms/{id}/start`
-  - [ ] `POST /rooms/{id}/actions` — submit GameAction
-  - [ ] `WS /ws/game/{roomId}` — broadcast GameEvent
 - [ ] Unit tests for GameEngine (pure logic, no Spring)
-- [ ] Integration test: full game via scripted MockChatModel (AI vs AI, deterministic)
 - Card pool (grows as effects are implemented; lives in `GameRoomFactory.currentCardPool`)
   - [x] ATTACK, DODGE
   - [ ] PEACH
@@ -160,6 +155,12 @@ Detailed design: see `doc/design/plan-minimal-1v1.md`.
 - Hero roster (blank heroes → real heroes; swap in `GameRoomFactory`)
   - [ ] Hero draft (28-hero pool, alternating picks, 3 per player)
   - [ ] Hero skills (implement per hero; register PhaseHooks into TurnEngine)
+
+#### WebSocket / REST API
+- [ ] `api/RoomStore` — in-memory `roomId → GameSession` registry
+- [ ] `api/RoomController` — `POST /rooms`, `/join`, `/start`, `/actions`; `GET /state`
+- [ ] `api/GameWebSocketHandler` — `WS /ws/game/{roomId}`, broadcast `GameEvent`
+- [ ] Integration test: full game via scripted MockChatModel (AI vs AI, deterministic)
 
 #### AI Agent
 - [ ] `ai-agent/` submodule scaffold (Spring Boot + Spring AI + Ollama)
