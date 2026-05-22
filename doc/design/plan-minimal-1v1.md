@@ -149,9 +149,9 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 - [x] start cannot be called twice
 
 **`GameSessionEventTest`**
-- [ ] start emits GameStarted as the first event with firstSeatIndex = SPY's seat index
-- [ ] GameStarted seatViews reflect correct HP and hand count
-- [ ] start emits HandUpdated for each seat with 4 cards
+- [x] start emits GameStarted as the first event with firstSeatIndex = SPY's seat index
+- [x] GameStarted seatViews reflect correct HP and hand count
+- [x] start emits HandUpdated for each seat with 4 cards
 
 ---
 
