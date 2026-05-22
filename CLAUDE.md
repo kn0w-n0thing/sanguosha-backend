@@ -101,6 +101,12 @@ Game Server → generates game logs
 - Show me the whole solution and todos before changing code
 - Never build the project because I will do it myself
 
+### TDD Workflow
+- One test at a time: write ONE failing test → RED → implement the minimum to pass → GREEN → next test
+- A compilation failure counts as RED — no need to run the project to confirm failure
+- Write only enough production code to make the current test pass — no speculative code
+- The "show solution before changing code" rule applies to production code, not test files; tests are written first as the specification
+
 ## TODOS
 
 Each iteration delivers a playable end-to-end slice: game server + AI agent + model training + CLI frontend.
@@ -112,122 +118,81 @@ The frontend is a CLI client (not a UI) — connects to the game server via WebS
 ### Iteration 0 — Foundation
 
 #### Game Server
-- [x] Set up Spring Boot in build.gradle.kts
-- [x] Set up WebSocket support
-- [x] Define core domain models
-  - [x] Card + CardType / CardCategory / DamageType / EquipmentSlot enums
-  - [x] Hero (heroId, gender, maxHp, skills, equipmentArea, specialArea)
-  - [x] Seat (seatIndex, handCards, judgmentArea, heroes, hp, allegiance)
-  - [x] Deck (drawPile, discardPile, revealedCards + all operations)
-  - [x] GamePhase + phase tape model (PhaseCell, TurnEngine, TurnControl, PhaseHook)
-  - [x] GameMode strategy interface + IGameRoom
-  - [x] GameRoom (seats, deck, mode, engine)
-  - [x] OneVsOneMode (role assignment, hero rotation on death)
-- [x] Set up MockK and testing infrastructure (mockk in build.gradle.kts)
+- [x] Set up Spring Boot and WebSocket
+- [x] Define core domain models (Card, Hero, Seat, Deck, GamePhase, GameMode, GameRoom, OneVsOneMode)
+- [x] Set up MockK and testing infrastructure
 
 #### CLI Frontend
-- [ ] Scaffold CLI frontend project (cli-client/)
-- [ ] Set up WebSocket client
-- [ ] Basic lobby commands (create / join room)
+- [ ] Scaffold project, WebSocket client, basic lobby commands
 
 ---
 
 ### Iteration 1 — 1v1 Mode (first playable slice)
 
-Approach: minimal slice first (blank heroes + ATTACK/DODGE only), then grow incrementally.
 Detailed design: see `doc/design/plan-minimal-1v1.md`.
 
 #### Game Server
-- [ ] Bug fixes
-  - [ ] `OneVsOneMode.onSeatDeath` — rotate hero queue; empty list when last hero falls
-  - [ ] `OneVsOneMode.checkWinCondition` — return winner when any seat's heroes list is empty
-- [ ] model/action: `GameAction`, `GameEvent`, `PendingRequest`, `SeatView`
-- [ ] `game/engine/GameEngine` — action processor + phase driver + attack→dodge interrupt
-- [x] `game/factory/GameRoomFactory` — builds minimal 1v1 room (blank heroes, growing card pool)
-- [ ] `game/log/GameLogger` — JSONL (state, action) log for training data
-- [ ] Unit tests for GameEngine (pure logic, no Spring)
-- Card pool (grows as effects are implemented; lives in `GameRoomFactory.currentCardPool`)
-  - [x] ATTACK, DODGE
-  - [ ] PEACH
-  - [ ] DUEL, BARBARIAN_INVASION, HAIL_OF_ARROWS
-  - [ ] Equipment (weapons, armor, horses)
-  - [ ] Full standard deck
-- Hero roster (blank heroes → real heroes; swap in `GameRoomFactory`)
-  - [ ] Hero draft (28-hero pool, alternating picks, 3 per player)
-  - [ ] Hero skills (implement per hero; register PhaseHooks into TurnEngine)
+- [ ] Fix OneVsOneMode (hero rotation, win condition)
+- [ ] Action protocol models (GameAction, GameEvent, PendingRequest, SeatView)
+- [ ] GameEngine — phase driver + action processor
+- [x] GameRoomFactory — minimal 1v1 room
+- [ ] GameLogger — JSONL game log for model training
+- [ ] Unit tests for game logic
+- [ ] Card pool expansion (PEACH → tricks → equipment → full deck)
+- [ ] Hero draft and skills
 
 #### WebSocket / REST API
-- [ ] `api/RoomStore` — in-memory `roomId → GameSession` registry
-- [ ] `api/RoomController` — `POST /rooms`, `/join`, `/start`, `/actions`; `GET /state`
-- [ ] `api/GameWebSocketHandler` — `WS /ws/game/{roomId}`, broadcast `GameEvent`
-- [ ] Integration test: full game via scripted MockChatModel (AI vs AI, deterministic)
+- [ ] REST endpoints (create room, join, start, submit action, get state)
+- [ ] WebSocket broadcast
+- [ ] Integration test: full game via scripted MockChatModel
 
 #### AI Agent
-- [ ] `ai-agent/` submodule scaffold (Spring Boot + Spring AI + Ollama)
-- [ ] `GameClientService` — WS + REST client, maintains local game state
-- [ ] `GameTools` — `@Tool` functions: playAttack, dodge, pass, endPlayPhase
-- [ ] `AiDecisionService` — ChatClient loop: state → prompt → action
-- [ ] Unit tests using MockChatModel
-- [ ] Behavioral tests: AI only makes legal moves (local-only, Ollama)
+- [ ] Scaffold ai-agent/ (Spring Boot + Spring AI + Ollama)
+- [ ] Game client (WebSocket + REST), @Tool functions, decision loop
+- [ ] Unit tests (MockChatModel) and behavioral tests (local-only, Ollama)
 
 #### Model Training
-- [ ] Set up `model-training/` directory with PyTorch project structure
-- [ ] Parse `GameLogger` JSONL → HuggingFace Dataset
-- [ ] Train mini transformer (~100M–350M params) on 1v1 game logs
+- [ ] Scaffold model-training/ (PyTorch project)
+- [ ] Parse game logs and train mini transformer on 1v1 games
 
 #### CLI Frontend
-- [ ] 1v1 game board rendering (seats, hand cards, hero, HP as text)
-- [ ] Card play commands (select card, select target by index)
-- [ ] Real-time game state sync via WebSocket
-- [ ] Game result output
+- [ ] 1v1 board rendering and card play commands
+- [ ] Real-time state sync and game result output
 
 ---
 
 ### Iteration 2 — Identity Mode
 
 #### Game Server
-- [ ] Implement IdentityMode (Lord / Loyalist / Rebel / Spy, hidden roles)
-  - [ ] Role assignment and reveal on death
-  - [ ] Kill reward / penalty rules
-- [ ] Scale turn state machine to 5–10 players
-- [ ] Write unit tests for identity mode logic
+- [ ] Implement IdentityMode (role assignment, reveal on death, kill reward/penalty)
+- [ ] Scale to 5–10 players
 
 #### AI Agent
-- [ ] Extend AI agent for identity mode (hidden role reasoning)
-- [ ] Write behavioral tests for identity mode (local-only)
+- [ ] Extend for identity mode (hidden role reasoning)
 
 #### Model Training
 - [ ] Add RAG pipeline (card rules and game knowledge)
-- [ ] Collect and train on identity mode game logs
+- [ ] Train on identity mode game logs
 
 #### CLI Frontend
-- [ ] Identity mode role display (hidden / revealed)
-- [ ] Multi-player lobby commands (5–10 players)
-- [ ] Kill reward / death reveal output
+- [ ] Role display, multi-player lobby, death reveal output
 
 ---
 
 ### Iteration 3 — Kingdom Mode
 
 #### Game Server
-- [ ] Implement KingdomMode (Wei / Shu / Wu / Qun, public allegiance)
-  - [ ] Dual-hero selection (main + sub general, faction matching)
-  - [ ] Special markers (先驱, 珠联璧合, 阴阳鱼)
-  - [ ] 鏖战 mode trigger
-- [ ] Write unit tests for kingdom mode logic
+- [ ] Implement KingdomMode (dual-hero, faction markers, 鏖战 trigger)
 
 #### AI Agent
-- [ ] Extend AI agent for kingdom mode (dual-hero skills, public allegiance)
-- [ ] Write behavioral tests for kingdom mode (local-only)
+- [ ] Extend for kingdom mode (dual-hero skills, public allegiance)
 
 #### Model Training
-- [ ] Fine-tune with LoRA/QLoRA on GTX 1070 Ti
-- [ ] Collect and train on kingdom mode game logs
+- [ ] Fine-tune with LoRA/QLoRA
+- [ ] Train on kingdom mode game logs
 
 #### CLI Frontend
-- [ ] Dual-hero display (main / sub general, face-up / face-down state)
-- [ ] Faction and special marker output
-- [ ] 鏖战 mode indicator
+- [ ] Dual-hero display, faction and marker output
 
 ---
 
@@ -235,17 +200,15 @@ Detailed design: see `doc/design/plan-minimal-1v1.md`.
 
 #### Game Server
 - [ ] Implement ThreeVsThreeMode and DoudizhuMode
-- [ ] Write full scenario tests (deal → turns → win condition)
+- [ ] Full scenario tests
 
 #### AI Agent
 - [ ] Self-play reinforcement learning
-- [ ] Serve trained model via Ollama and plug into agent
-- [ ] Extract AI agent module to a separate repo
+- [ ] Serve trained model via Ollama
+- [ ] Extract to separate repo
 
 #### Model Training
-- [ ] Extract model training module to a separate repo
+- [ ] Extract to separate repo
 
 #### CLI Frontend
-- [ ] 3v3 and Doudizhu mode commands
-- [ ] Spectator mode (read-only output)
-- [ ] Polish (consistent text layout, colorized output)
+- [ ] 3v3 and Doudizhu mode, spectator mode, polish
