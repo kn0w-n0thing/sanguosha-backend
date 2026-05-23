@@ -290,10 +290,10 @@ Delayed tricks (resolved during Judge phase):
 
 | File                              | Status | Purpose                                   |
 |-----------------------------------|--------|-------------------------------------------|
-| `model/action/GameAction.kt`      | [ ]    | Player intent protocol                    |
-| `model/action/PendingRequest.kt`  | [ ]    | Mid-turn interrupt state                  |
-| `model/action/GameEvent.kt`       | [ ]    | Server-to-client events                   |
-| `model/action/SeatView.kt`        | [ ]    | Public seat snapshot                      |
+| `model/action/GameAction.kt`      | [x]    | Player intent protocol                    |
+| `model/action/PendingRequest.kt`  | [x]    | Mid-turn interrupt state                  |
+| `model/action/GameEvent.kt`       | [x]    | Server-to-client events                   |
+| `model/action/SeatView.kt`        | [x]    | Public seat snapshot                      |
 | `model/game/GameMode.kt`          | [x]    | Pure strategy interface                   |
 | `game/room/GameRoom.kt`           | [x]    | Pure data aggregate (no deck, no engine)  |
 | `game/session/GameSession.kt`     | [x]    | Game orchestrator (partial)               |
