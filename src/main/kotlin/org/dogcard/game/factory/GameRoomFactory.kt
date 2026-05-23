@@ -7,6 +7,7 @@ import org.dogcard.game.room.GameRoom
 import org.dogcard.model.card.Card
 import org.dogcard.model.card.CardType
 import org.dogcard.model.card.StandardCards
+import org.dogcard.model.deck.IDeck
 import org.dogcard.model.seat.HpState
 import org.dogcard.model.seat.Seat
 
@@ -19,7 +20,9 @@ class GameRoomFactory {
         it.type in setOf(CardType.ATTACK, CardType.DODGE)
     }
 
-    fun create1v1Setup(): GameSetup {
+    fun create1v1Setup(): GameSetup = create1v1Setup(StandardDeck.shuffled(currentCardPool))
+
+    fun create1v1Setup(deck: IDeck): GameSetup {
         val seats = List(SEAT_COUNT_1V1) { index ->
             Seat(
                 seatIndex = index,
@@ -28,7 +31,6 @@ class GameRoomFactory {
                 hp = HpState(4, 4)
             )
         }
-        val room = GameRoom(mode = OneVsOneMode(), seats = seats)
-        return GameSetup(room = room, deck = StandardDeck.shuffled(currentCardPool))
+        return GameSetup(room = GameRoom(mode = OneVsOneMode(), seats = seats), deck = deck)
     }
 }

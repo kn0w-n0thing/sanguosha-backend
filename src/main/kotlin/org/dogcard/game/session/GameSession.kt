@@ -1,8 +1,11 @@
 package org.dogcard.game.session
 
 import org.dogcard.game.factory.GameSetup
+import org.dogcard.model.action.GameAction
 import org.dogcard.model.action.GameEvent
+import org.dogcard.model.action.PendingRequest
 import org.dogcard.model.action.SeatView
+import org.dogcard.model.card.CardType
 import org.dogcard.model.deck.IDeck
 import org.dogcard.model.hero.Role
 import org.dogcard.model.seat.Allegiance
@@ -25,6 +28,8 @@ class GameSession(
         private set
     var currentPhase: GamePhase? = null
         private set
+    var pendingRequest: PendingRequest? = null
+        private set
 
     fun start() {
         check(currentPhase == null) { "Game has already started" }
@@ -43,6 +48,52 @@ class GameSession(
         ))
         _seats.forEach { seat ->
             onEvent(GameEvent.HandUpdated(seatIndex = seat.seatIndex, cards = seat.handCards))
+        }
+    }
+
+    fun submitAction(seatIndex: Int, action: GameAction): Result<Unit> {
+        return when (action) {
+            is GameAction.PlayAttack -> {
+                if (seatIndex != currentSeatIndex)
+                    return Result.failure(IllegalArgumentException("Only the active seat can play an attack"))
+                if (pendingRequest != null)
+                    return Result.failure(IllegalArgumentException("A response is already pending"))
+                if (action.card.type != CardType.ATTACK)
+                    return Result.failure(IllegalArgumentException("PlayAttack requires an ATTACK card"))
+                pendingRequest = PendingRequest.RespondToAttack(
+                    attackerSeatIndex = seatIndex,
+                    targetSeatIndex = action.targetSeatIndex,
+                    card = action.card,
+                )
+                Result.success(Unit)
+            }
+
+            is GameAction.RespondWithDodge -> {
+                val request = pendingRequest as? PendingRequest.RespondToAttack
+                    ?: return Result.failure(IllegalArgumentException("No pending attack to respond to"))
+                if (seatIndex != request.targetSeatIndex)
+                    return Result.failure(IllegalArgumentException("Only the target seat can respond to an attack"))
+                if (action.card.type != CardType.DODGE)
+                    return Result.failure(IllegalArgumentException("RespondWithDodge requires a DODGE card"))
+                setup.deck.discard(listOf(action.card))
+                pendingRequest = null
+                Result.success(Unit)
+            }
+
+            is GameAction.Pass -> {
+                val request = pendingRequest as? PendingRequest.RespondToAttack
+                    ?: return Result.failure(IllegalArgumentException("No pending attack to respond to"))
+                val target = _seats[request.targetSeatIndex]
+                _seats = _seats.mapIndexed { i, seat ->
+                    if (i == request.targetSeatIndex) seat.copy(hp = target.hp.copy(current = target.hp.current - 1))
+                    else seat
+                }
+                setup.deck.discard(listOf(request.card))
+                pendingRequest = null
+                Result.success(Unit)
+            }
+
+            else -> Result.success(Unit)
         }
     }
 

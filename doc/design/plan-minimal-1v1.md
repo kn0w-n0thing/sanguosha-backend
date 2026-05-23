@@ -172,16 +172,20 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 ### Step 3 — Play cards (v1: ATTACK + DODGE only)
 
 **`GameSessionPlayTest`** — attack
-- [ ] pendingRequest is set after PlayAttack
-- [ ] PlayAttack with a non-ATTACK card returns an error
-- [ ] PlayAttack submitted by the non-active seat returns an error
-- [ ] PlayAttack submitted while pendingRequest is already set returns an error
+- [x] pendingRequest is set after PlayAttack
+- [x] PlayAttack with a non-ATTACK card returns an error
+- [x] PlayAttack submitted by the non-active seat returns an error
+- [x] PlayAttack submitted while pendingRequest is already set returns an error
 
 **`GameSessionPlayTest`** — response window
-- [ ] RespondWithDodge clears pendingRequest
-- [ ] RespondWithDodge with a non-DODGE card returns an error
-- [ ] RespondWithDodge submitted by the wrong seat returns an error
-- [ ] Pass clears pendingRequest
+- [x] RespondWithDodge clears pendingRequest
+- [x] RespondWithDodge with a non-DODGE card returns an error
+- [x] RespondWithDodge submitted by the wrong seat returns an error
+- [x] Pass clears pendingRequest
+- [x] RespondWithDodge does not reduce target HP
+- [x] Pass reduces target HP by 1 by default
+- [x] When pendingRequest is resolved, discard the attack card to the discard pile
+- [x] RespondWithDodge discards the dodge card to the discard pile
 
 **`GameSessionPlayTest`** — end turn
 - [ ] EndPlayPhase while pendingRequest is set returns an error
@@ -195,6 +199,9 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 - [ ] RespondWithDodge emits DodgePlayed
 - [ ] Pass emits DamageDealt with amount=1 and correct newHp
 
+**Refactoring**
+- [ ] Use error message variables instead of raw string
+- [ ] Use ownership and borrowing to make sure the cards will not be duplicated or missing
 ---
 
 ### Step 4 — Game over
