@@ -1,17 +1,40 @@
 package org.dogcard.game.session
 
 import org.dogcard.game.factory.GameRoomFactory
+import org.dogcard.model.action.GameAction
 import org.dogcard.model.action.GameEvent
+import org.dogcard.model.card.Card
+import org.dogcard.model.card.CardType
+import org.dogcard.model.card.Suit
 import org.dogcard.model.hero.Role
 import org.dogcard.model.seat.Allegiance
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.dogcard.util.FakeDeck
+import org.dogcard.util.firstOfType
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.random.Random
 
 class GameSessionEventTest {
 
     private val factory = GameRoomFactory()
+
+    private fun attack(number: Int) = Card(CardType.ATTACK, Suit.SPADE, number)
+    private fun dodge(number: Int) = Card(CardType.DODGE, Suit.HEART, number)
+
+    private fun sessionAtPlayPhaseWithEvents(): Pair<GameSession, MutableList<GameEvent>> {
+        val events = mutableListOf<GameEvent>()
+        val deck = FakeDeck(
+            attack(1), attack(2), dodge(1), dodge(2),
+            attack(3), attack(4), dodge(3), dodge(4),
+            attack(5), dodge(5),
+        )
+        val session = GameSession(factory.create1v1Setup(deck), random = Random(seed = 0), onEvent = { events += it })
+        session.start()
+        session.advancePhase() // Judge → Draw
+        session.advancePhase() // Draw → Play
+        events.clear()
+        return session to events
+    }
 
     @Test
     fun `GameStarted seatViews reflect correct HP and hand count`() {
@@ -78,6 +101,66 @@ class GameSessionEventTest {
         val first = events.first()
         assertInstanceOf(GameEvent.GameStarted::class.java, first)
         assertEquals(spySeatIndex, (first as GameEvent.GameStarted).firstSeatIndex)
+    }
+
+    @Test
+    fun `PlayAttack emits AttackPlayed and ResponseRequested`() {
+        val (session, events) = sessionAtPlayPhaseWithEvents()
+        val activeSeatIndex = session.currentSeatIndex!!
+        val targetSeatIndex = 1 - activeSeatIndex
+        val attackCard = session.seats[activeSeatIndex].handCards.firstOfType(CardType.ATTACK)
+        session.submitAction(
+            activeSeatIndex,
+            GameAction.PlayAttack(card = attackCard, targetSeatIndex = targetSeatIndex)
+        )
+        val attackPlayed = events.filterIsInstance<GameEvent.AttackPlayed>().firstOrNull()
+        val responseRequested = events.filterIsInstance<GameEvent.ResponseRequested>().firstOrNull()
+        assertNotNull(attackPlayed)
+        assertNotNull(responseRequested)
+        assertEquals(activeSeatIndex, attackPlayed!!.attackerSeatIndex)
+        assertEquals(targetSeatIndex, attackPlayed.targetSeatIndex)
+        assertEquals(attackCard, attackPlayed.card)
+        assertEquals(activeSeatIndex, responseRequested!!.attackerSeatIndex)
+        assertEquals(targetSeatIndex, responseRequested.targetSeatIndex)
+    }
+
+    @Test
+    fun `RespondWithDodge emits DodgePlayed`() {
+        val (session, events) = sessionAtPlayPhaseWithEvents()
+        val activeSeatIndex = session.currentSeatIndex!!
+        val targetSeatIndex = 1 - activeSeatIndex
+        val attackCard = session.seats[activeSeatIndex].handCards.firstOfType(CardType.ATTACK)
+        session.submitAction(
+            activeSeatIndex,
+            GameAction.PlayAttack(card = attackCard, targetSeatIndex = targetSeatIndex)
+        )
+        val dodgeCard = session.seats[targetSeatIndex].handCards.firstOfType(CardType.DODGE)
+        events.clear()
+        session.submitAction(targetSeatIndex, GameAction.RespondWithDodge(card = dodgeCard))
+        val dodgePlayed = events.filterIsInstance<GameEvent.DodgePlayed>().firstOrNull()
+        assertNotNull(dodgePlayed)
+        assertEquals(targetSeatIndex, dodgePlayed!!.defenderSeatIndex)
+        assertEquals(dodgeCard, dodgePlayed.card)
+    }
+
+    @Test
+    fun `Pass emits DamageDealt with amount=1 and correct newHp`() {
+        val (session, events) = sessionAtPlayPhaseWithEvents()
+        val activeSeatIndex = session.currentSeatIndex!!
+        val targetSeatIndex = 1 - activeSeatIndex
+        val hpBefore = session.seats[targetSeatIndex].hp.current
+        val attackCard = session.seats[activeSeatIndex].handCards.firstOfType(CardType.ATTACK)
+        session.submitAction(
+            activeSeatIndex,
+            GameAction.PlayAttack(card = attackCard, targetSeatIndex = targetSeatIndex)
+        )
+        events.clear()
+        session.submitAction(targetSeatIndex, GameAction.Pass)
+        val damageDealt = events.filterIsInstance<GameEvent.DamageDealt>().firstOrNull()
+        assertNotNull(damageDealt)
+        assertEquals(targetSeatIndex, damageDealt!!.targetSeatIndex)
+        assertEquals(1, damageDealt.amount)
+        assertEquals(hpBefore - 1, damageDealt.newHp)
     }
 
     @Test

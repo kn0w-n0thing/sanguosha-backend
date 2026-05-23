@@ -5,6 +5,7 @@ import org.dogcard.model.action.GameAction
 import org.dogcard.model.card.Card
 import org.dogcard.model.card.CardType
 import org.dogcard.model.card.Suit
+import org.dogcard.model.turn.GamePhase
 import org.dogcard.util.FakeDeck
 import org.dogcard.util.firstOfType
 import org.junit.jupiter.api.Assertions.*
@@ -205,5 +206,75 @@ class GameSessionPlayTest {
             GameAction.PlayAttack(card = dodgeCard, targetSeatIndex = targetSeatIndex)
         )
         assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `EndPlayPhase while pendingRequest is set returns an error`() {
+        val session = sessionAtPlayPhase()
+        val activeSeatIndex = session.currentSeatIndex!!
+        val targetSeatIndex = 1 - activeSeatIndex
+        val attackCard = session.seats[activeSeatIndex].handCards.firstOfType(CardType.ATTACK)
+        session.submitAction(
+            activeSeatIndex,
+            GameAction.PlayAttack(card = attackCard, targetSeatIndex = targetSeatIndex)
+        )
+        val result = session.submitAction(activeSeatIndex, GameAction.EndPlayPhase)
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `EndPlayPhase from the non-active seat returns an error`() {
+        val session = sessionAtPlayPhase()
+        val activeSeatIndex = session.currentSeatIndex!!
+        val nonActiveSeatIndex = 1 - activeSeatIndex
+        val result = session.submitAction(nonActiveSeatIndex, GameAction.EndPlayPhase)
+        assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `EndPlayPhase advances phase to Discard`() {
+        val session = sessionAtPlayPhase()
+        val activeSeatIndex = session.currentSeatIndex!!
+        session.submitAction(activeSeatIndex, GameAction.EndPlayPhase)
+        assertEquals(GamePhase.Discard, session.currentPhase)
+    }
+
+    @Test
+    fun `Discard phase reduces hand to hand limit after player specifies cards`() {
+        val session = sessionAtPlayPhase()
+        val activeSeatIndex = session.currentSeatIndex!!
+        session.submitAction(activeSeatIndex, GameAction.EndPlayPhase) // Play → Discard
+        val hand = session.seats[activeSeatIndex].handCards
+        val handLimit = session.seats[activeSeatIndex].hp.current
+        val toDiscard = hand.takeLast(hand.size - handLimit)
+        session.submitAction(activeSeatIndex, GameAction.Discard(cards = toDiscard))
+        assertEquals(handLimit, session.seats[activeSeatIndex].handCards.size)
+    }
+
+    @Test
+    fun `The discarded cards are moved to the discard pile`() {
+        val session = sessionAtPlayPhase()
+        val activeSeatIndex = session.currentSeatIndex!!
+        session.submitAction(activeSeatIndex, GameAction.EndPlayPhase)
+        val hand = session.seats[activeSeatIndex].handCards
+        val handLimit = session.seats[activeSeatIndex].hp.current
+        val toDiscard = hand.takeLast(hand.size - handLimit)
+        session.submitAction(activeSeatIndex, GameAction.Discard(cards = toDiscard))
+        assertTrue(toDiscard.all { (session.deck as FakeDeck).discardPile.contains(it) })
+    }
+
+    @Test
+    fun `End phase starts the next seat's turn at Judge phase`() {
+        val session = sessionAtPlayPhase()
+        val activeSeatIndex = session.currentSeatIndex!!
+        val nextSeatIndex = 1 - activeSeatIndex
+        session.submitAction(activeSeatIndex, GameAction.EndPlayPhase)
+        val hand = session.seats[activeSeatIndex].handCards
+        val handLimit = session.seats[activeSeatIndex].hp.current
+        val toDiscard = hand.takeLast(hand.size - handLimit)
+        session.submitAction(activeSeatIndex, GameAction.Discard(cards = toDiscard))
+        session.advancePhase() // End → next seat's Judge
+        assertEquals(nextSeatIndex, session.currentSeatIndex)
+        assertEquals(GamePhase.Judge, session.currentPhase)
     }
 }

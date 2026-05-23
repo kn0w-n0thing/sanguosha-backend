@@ -65,6 +65,19 @@ class GameSession(
                     targetSeatIndex = action.targetSeatIndex,
                     card = action.card,
                 )
+                onEvent(
+                    GameEvent.AttackPlayed(
+                        attackerSeatIndex = seatIndex,
+                        targetSeatIndex = action.targetSeatIndex,
+                        card = action.card,
+                    )
+                )
+                onEvent(
+                    GameEvent.ResponseRequested(
+                        attackerSeatIndex = seatIndex,
+                        targetSeatIndex = action.targetSeatIndex,
+                    )
+                )
                 Result.success(Unit)
             }
 
@@ -76,6 +89,7 @@ class GameSession(
                 if (action.card.type != CardType.DODGE)
                     return Result.failure(IllegalArgumentException("RespondWithDodge requires a DODGE card"))
                 setup.deck.discard(listOf(action.card))
+                onEvent(GameEvent.DodgePlayed(defenderSeatIndex = seatIndex, card = action.card))
                 pendingRequest = null
                 Result.success(Unit)
             }
@@ -89,7 +103,34 @@ class GameSession(
                     else seat
                 }
                 setup.deck.discard(listOf(request.card))
+                onEvent(
+                    GameEvent.DamageDealt(
+                        targetSeatIndex = request.targetSeatIndex,
+                        amount = 1,
+                        newHp = _seats[request.targetSeatIndex].hp.current,
+                    )
+                )
                 pendingRequest = null
+                Result.success(Unit)
+            }
+
+            is GameAction.EndPlayPhase -> {
+                if (seatIndex != currentSeatIndex)
+                    return Result.failure(IllegalArgumentException("Only the active seat can end the play phase"))
+                if (pendingRequest != null)
+                    return Result.failure(IllegalArgumentException("Cannot end play phase while a response is pending"))
+                currentPhase = GamePhase.Discard
+                Result.success(Unit)
+            }
+
+            is GameAction.Discard -> {
+                if (seatIndex != currentSeatIndex)
+                    return Result.failure(IllegalArgumentException("Only the active seat can discard"))
+                _seats = _seats.mapIndexed { i, s ->
+                    if (i == seatIndex) s.copy(handCards = s.handCards - action.cards.toSet()) else s
+                }
+                setup.deck.discard(action.cards)
+                currentPhase = GamePhase.End
                 Result.success(Unit)
             }
 
@@ -101,12 +142,18 @@ class GameSession(
         when (currentPhase) {
             GamePhase.Judge -> advanceJudgePhase()
             GamePhase.Draw  -> advanceDrawPhase()
+            GamePhase.End -> advanceEndPhase()
             else            -> {}
         }
     }
 
     private fun advanceJudgePhase() {
         currentPhase = GamePhase.Draw
+    }
+
+    private fun advanceEndPhase() {
+        currentSeatIndex = (currentSeatIndex!! + 1) % _seats.size
+        currentPhase = GamePhase.Judge
     }
 
     private fun advanceDrawPhase() {

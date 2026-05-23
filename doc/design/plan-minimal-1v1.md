@@ -188,16 +188,17 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 - [x] RespondWithDodge discards the dodge card to the discard pile
 
 **`GameSessionPlayTest`** — end turn
-- [ ] EndPlayPhase while pendingRequest is set returns an error
-- [ ] EndPlayPhase from the non-active seat returns an error
-- [ ] EndPlayPhase advances phase to Discard
-- [ ] Discard phase auto-discards excess cards down to hand limit (= current HP)
-- [ ] End phase starts the next seat's turn at Judge phase
+- [x] EndPlayPhase while pendingRequest is set returns an error
+- [x] EndPlayPhase from the non-active seat returns an error
+- [x] EndPlayPhase advances phase to Discard
+- [x] Discard phase auto-discards excess cards down to hand limit (= current HP by default)
+- [x] The discarded card is moved to the discard pile.
+- [x] End phase starts the next seat's turn at Judge phase
 
 **`GameSessionEventTest`** *(continued)*
-- [ ] PlayAttack emits AttackPlayed and ResponseRequested
-- [ ] RespondWithDodge emits DodgePlayed
-- [ ] Pass emits DamageDealt with amount=1 and correct newHp
+- [x] PlayAttack emits AttackPlayed and ResponseRequested
+- [x] RespondWithDodge emits DodgePlayed
+- [x] Pass emits DamageDealt with amount=1 and correct newHp
 
 **Refactoring**
 - [ ] Use error message variables instead of raw string

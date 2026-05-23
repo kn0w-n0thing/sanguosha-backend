@@ -7,4 +7,5 @@ sealed class GameAction {
     data class RespondWithDodge(val card: Card) : GameAction()
     data object Pass : GameAction()
     data object EndPlayPhase : GameAction()
+    data class Discard(val cards: List<Card>) : GameAction()
 }
