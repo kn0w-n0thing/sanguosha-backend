@@ -1,27 +1,54 @@
 package org.dogcard.util
 
 import org.dogcard.model.card.Card
+import org.dogcard.model.deck.CardZone
+import org.dogcard.model.deck.CardZoneType
+import org.dogcard.model.deck.ICardZone
 import org.dogcard.model.deck.IDeck
 
-class FakeDeck(vararg cards: Card) : IDeck {
-    private val queue = ArrayDeque(cards.toList())
-    override val remaining: Int get() = queue.size
-    override fun draw(n: Int): List<Card> = (1..n).map { queue.removeFirst() }
-    override fun flip(): Card = queue.removeFirst()
-    override fun peek(n: Int): List<Card> = queue.take(n)
-    override fun putOnTop(cards: List<Card>) = cards.reversed().forEach { queue.addFirst(it) }
-    override fun putOnBottom(cards: List<Card>) = cards.forEach { queue.addLast(it) }
-    override fun search(predicate: (Card) -> Boolean): Card? =
-        queue.firstOrNull(predicate)?.also { queue.remove(it) }
+// Test double for IDeck. Cards are served in the given order with no shuffling,
+// making game session tests fully deterministic.
+class FakeDeck(vararg cards: Card, seatCount: Int = 2) : IDeck {
 
-    val discardPile: MutableList<Card> = mutableListOf()
-    override fun discard(cards: List<Card>) {
-        discardPile.addAll(cards)
+    private val zones: Map<CardZoneType, CardZone> = buildZones(cards.toList(), seatCount)
+
+    override val remaining: Int get() = zones[CardZoneType.DrawPile]!!.toList().size
+
+    override fun zone(type: CardZoneType): ICardZone = zones[type] ?: error("Zone $type not found")
+
+    override fun draw(n: Int, seatIndex: Int): List<Card> {
+        val drawZone = zones[CardZoneType.DrawPile]!!
+        val handZone = zones[CardZoneType.Hand(seatIndex)]!!
+        if (drawZone.toList().size < n) reshuffle()
+        val cards = drawZone.toList().take(n)
+        drawZone.transferAll(cards, handZone)
+        return cards
     }
 
-    override fun takeFromDiscard(card: Card): Card = throw UnsupportedOperationException()
-    override fun reshuffle() {}
-    override fun reveal(n: Int) {}
-    override fun takeRevealed(card: Card): Card = throw UnsupportedOperationException()
-    override fun discardRevealed() {}
+    // No shuffle — preserves discard order so tests can assert on specific cards.
+    override fun reshuffle() {
+        val drawZone = zones[CardZoneType.DrawPile]!!
+        val discardZone = zones[CardZoneType.DiscardPile]!!
+        discardZone.transferAll(discardZone.toList(), drawZone)
+    }
+
+    // Convenience accessor for test assertions — avoids casting to FakeDeck in every test.
+    val discardPile: List<Card> get() = zones[CardZoneType.DiscardPile]!!.toList()
+
+    fun discard(cards: List<Card>, fromSeatIndex: Int) {
+        zone(CardZoneType.Hand(fromSeatIndex)).transferAll(cards, zone(CardZoneType.DiscardPile))
+    }
+
+    private fun buildZones(cards: List<Card>, seatCount: Int): Map<CardZoneType, CardZone> {
+        val map = mutableMapOf<CardZoneType, CardZone>()
+        map[CardZoneType.DrawPile] = CardZone(CardZoneType.DrawPile, cards)
+        map[CardZoneType.DiscardPile] = CardZone(CardZoneType.DiscardPile)
+        map[CardZoneType.InFlight] = CardZone(CardZoneType.InFlight)
+        repeat(seatCount) { i ->
+            map[CardZoneType.Hand(i)] = CardZone(CardZoneType.Hand(i))
+            map[CardZoneType.Judgment(i)] = CardZone(CardZoneType.Judgment(i))
+            map[CardZoneType.Equipment(i)] = CardZone(CardZoneType.Equipment(i))
+        }
+        return map
+    }
 }

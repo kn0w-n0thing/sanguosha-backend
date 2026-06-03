@@ -11,6 +11,7 @@ data class Card(
     val type: CardType,
     val suit: Suit,
     val number: Int,
+    val id: Int,
 ) {
     init {
         require(number in 1..13) { "Card number must be 1–13, got $number" }
@@ -36,6 +37,6 @@ data class Card(
             13 -> "K"
             else -> number.toString()
         }
-        return "($suitSymbol$rank)$name"
+        return "[$id]($suitSymbol$rank)$name"
     }
 }

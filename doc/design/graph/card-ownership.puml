@@ -1,0 +1,76 @@
+@startuml card-ownership
+
+class Card {
+    +id: Int
+    +type: CardType
+    +suit: Suit
+    +number: Int
+}
+
+class CardZoneType <<sealed>> {
+    Hand(seatIndex: Int)
+    Judgment(seatIndex: Int)
+    Equipment(seatIndex: Int)
+    DrawPile
+    DiscardPile
+    InFlight
+}
+
+interface ICardZone {
+    +contains(Card): Boolean
+    +toList(): List<Card>
+    +transfer(Card, ICardZone): Card
+    +transferAll(List<Card>, ICardZone)
+}
+
+class CardZone {
+    +type: CardZoneType
+    +initial: List<Card>
+}
+
+interface IDeck {
+    +remaining: Int
+    +zone(CardZoneType): ICardZone
+    +draw(Int, seatIndex: Int): List<Card>
+    +reshuffle()
+}
+
+class StandardDeck {
+    -zones: Map<CardZoneType, CardZone>
+}
+
+class FakeDeck {
+    -zones: Map<CardZoneType, CardZone>
+    +discardPile: List<Card>
+}
+
+class Seat {
+    +seatIndex: Int
+    +handZone: ICardZone
+    +hp: HpState
+    +allegiance: Allegiance
+    +handCards: List<Card>
+}
+
+class GameSession {
+    +seats: List<Seat>
+    +inFlightZone: ICardZone
+    +deck: IDeck
+    +currentSeatIndex: Int?
+    +currentPhase: GamePhase?
+    +pendingRequest: PendingRequest?
+}
+
+ICardZone "1" *-- "0..*" Card
+ICardZone <|.. CardZone
+CardZone --> CardZoneType
+IDeck <|.. StandardDeck
+IDeck <|.. FakeDeck
+StandardDeck *-- "1..*" CardZone : owns all zones
+FakeDeck *-- "1..*" CardZone : owns all zones
+Seat o-- "1" ICardZone : handZone
+GameSession o-- "1" ICardZone : inFlightZone
+GameSession o-- "1" IDeck
+GameSession o-- "2..*" Seat
+
+@enduml

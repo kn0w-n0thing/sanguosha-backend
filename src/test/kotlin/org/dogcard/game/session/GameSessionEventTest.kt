@@ -18,8 +18,8 @@ class GameSessionEventTest {
 
     private val factory = GameRoomFactory()
 
-    private fun attack(number: Int) = Card(CardType.ATTACK, Suit.SPADE, number)
-    private fun dodge(number: Int) = Card(CardType.DODGE, Suit.HEART, number)
+    private fun attack(number: Int) = Card(CardType.ATTACK, Suit.SPADE, number, id = number)
+    private fun dodge(number: Int) = Card(CardType.DODGE, Suit.HEART, number, id = 100 + number)
 
     private fun sessionAtPlayPhaseWithEvents(): Pair<GameSession, MutableList<GameEvent>> {
         val events = mutableListOf<GameEvent>()

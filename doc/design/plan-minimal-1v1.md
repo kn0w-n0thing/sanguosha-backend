@@ -200,12 +200,21 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 - [x] RespondWithDodge emits DodgePlayed
 - [x] Pass emits DamageDealt with amount=1 and correct newHp
 
-**Refactoring**
-- [ ] Use error message variables instead of raw string
-- [ ] Use ownership and borrowing to make sure the cards will not be duplicated or missing
+### Step 4 - Refactor
+- [x] Extract error messages into named constants instead of raw strings
+  - No test changes — tests assert `result.isFailure`, not the message text
+- [x] Redesign card ownership — full TODO and test cases in [`card-ownership.md`](card-ownership.md)
+  - All existing card-related tests must still pass after the refactor (behavior unchanged)
+  - Invariant: at end of each action, sum of all zone sizes == total card count
+- [ ] Add a Begin phase before Judge in the turn sequence
+  - Modify: `start enters Judge phase for the SPY seat` → now enters Begin phase
+  - Modify: `End phase starts the next seat's turn at Judge phase` → now starts at Begin phase
+  - Modify: `Judge phase auto-advances when judgment area is empty` → Begin auto-advances to Judge first
+  - Add: `Begin phase auto-advances to Judge`
+
 ---
 
-### Step 4 — Game over
+### Step 5 — Game over
 
 **`GameSessionDeathTest`**
 - [ ] rotated hero enters with full HP
@@ -222,7 +231,7 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 
 ---
 
-### Step 5 — REST + WebSocket + AI agent seam test
+### Step 6- — REST + WebSocket + AI agent seam test
 
 **`RoomControllerTest`** (Spring Boot Test)
 - [ ] POST /rooms returns 200 with roomId

@@ -6,6 +6,8 @@ import org.dogcard.model.action.GameEvent
 import org.dogcard.model.action.PendingRequest
 import org.dogcard.model.action.SeatView
 import org.dogcard.model.card.CardType
+import org.dogcard.model.deck.CardZoneType
+import org.dogcard.model.deck.ICardZone
 import org.dogcard.model.deck.IDeck
 import org.dogcard.model.hero.Role
 import org.dogcard.model.seat.Allegiance
@@ -16,13 +18,26 @@ import kotlin.random.Random
 private const val INITIAL_HAND_SIZE = 4
 private const val DRAW_COUNT = 2
 
+private const val ERR_GAME_ALREADY_STARTED = "Game has already started"
+private const val ERR_NOT_ACTIVE_SEAT_ATTACK = "Only the active seat can play an attack"
+private const val ERR_RESPONSE_ALREADY_PENDING = "A response is already pending"
+private const val ERR_PLAY_ATTACK_REQUIRES_ATTACK_CARD = "PlayAttack requires an ATTACK card"
+private const val ERR_NO_PENDING_ATTACK = "No pending attack to respond to"
+private const val ERR_NOT_TARGET_SEAT = "Only the target seat can respond to an attack"
+private const val ERR_RESPOND_REQUIRES_DODGE_CARD = "RespondWithDodge requires a DODGE card"
+private const val ERR_NOT_ACTIVE_SEAT_END = "Only the active seat can end the play phase"
+private const val ERR_CANNOT_END_WHILE_PENDING = "Cannot end play phase while a response is pending"
+private const val ERR_NOT_ACTIVE_SEAT_DISCARD = "Only the active seat can discard"
+
 class GameSession(
     private val setup: GameSetup,
     private val random: Random = Random,
     private val onEvent: (GameEvent) -> Unit = {},
 ) {
-    private var _seats: List<Seat> = setup.room.seats
+    private val _seats: List<Seat> = setup.room.seats
     val seats: List<Seat> get() = _seats
+    val inFlightZone: ICardZone get() = setup.deck.zone(CardZoneType.InFlight)
+    private val discardZone: ICardZone get() = setup.deck.zone(CardZoneType.DiscardPile)
     val deck: IDeck get() = setup.deck
     var currentSeatIndex: Int? = null
         private set
@@ -32,10 +47,10 @@ class GameSession(
         private set
 
     fun start() {
-        check(currentPhase == null) { "Game has already started" }
-        _seats = setup.room.mode.assignAllegiances(_seats, random)
-        _seats = _seats.map { seat ->
-            seat.copy(handCards = setup.deck.draw(INITIAL_HAND_SIZE))
+        check(currentPhase == null) { ERR_GAME_ALREADY_STARTED }
+        setup.room.mode.assignAllegiances(_seats, random)
+        _seats.forEach { seat ->
+            setup.deck.draw(INITIAL_HAND_SIZE, seat.seatIndex)
         }
         val spyIndex = _seats.indexOfFirst { it.allegiance == Allegiance.RoleBased(Role.SPY) }
         currentSeatIndex = spyIndex
@@ -55,15 +70,15 @@ class GameSession(
         return when (action) {
             is GameAction.PlayAttack -> {
                 if (seatIndex != currentSeatIndex)
-                    return Result.failure(IllegalArgumentException("Only the active seat can play an attack"))
+                    return Result.failure(IllegalArgumentException(ERR_NOT_ACTIVE_SEAT_ATTACK))
                 if (pendingRequest != null)
-                    return Result.failure(IllegalArgumentException("A response is already pending"))
+                    return Result.failure(IllegalArgumentException(ERR_RESPONSE_ALREADY_PENDING))
                 if (action.card.type != CardType.ATTACK)
-                    return Result.failure(IllegalArgumentException("PlayAttack requires an ATTACK card"))
+                    return Result.failure(IllegalArgumentException(ERR_PLAY_ATTACK_REQUIRES_ATTACK_CARD))
+                _seats[seatIndex].handZone.transfer(action.card, inFlightZone)
                 pendingRequest = PendingRequest.RespondToAttack(
                     attackerSeatIndex = seatIndex,
                     targetSeatIndex = action.targetSeatIndex,
-                    card = action.card,
                 )
                 onEvent(
                     GameEvent.AttackPlayed(
@@ -83,12 +98,12 @@ class GameSession(
 
             is GameAction.RespondWithDodge -> {
                 val request = pendingRequest as? PendingRequest.RespondToAttack
-                    ?: return Result.failure(IllegalArgumentException("No pending attack to respond to"))
+                    ?: return Result.failure(IllegalArgumentException(ERR_NO_PENDING_ATTACK))
                 if (seatIndex != request.targetSeatIndex)
-                    return Result.failure(IllegalArgumentException("Only the target seat can respond to an attack"))
+                    return Result.failure(IllegalArgumentException(ERR_NOT_TARGET_SEAT))
                 if (action.card.type != CardType.DODGE)
-                    return Result.failure(IllegalArgumentException("RespondWithDodge requires a DODGE card"))
-                setup.deck.discard(listOf(action.card))
+                    return Result.failure(IllegalArgumentException(ERR_RESPOND_REQUIRES_DODGE_CARD))
+                _seats[seatIndex].handZone.transfer(action.card, discardZone)
                 onEvent(GameEvent.DodgePlayed(defenderSeatIndex = seatIndex, card = action.card))
                 pendingRequest = null
                 Result.success(Unit)
@@ -96,13 +111,12 @@ class GameSession(
 
             is GameAction.Pass -> {
                 val request = pendingRequest as? PendingRequest.RespondToAttack
-                    ?: return Result.failure(IllegalArgumentException("No pending attack to respond to"))
+                    ?: return Result.failure(IllegalArgumentException(ERR_NO_PENDING_ATTACK))
                 val target = _seats[request.targetSeatIndex]
-                _seats = _seats.mapIndexed { i, seat ->
-                    if (i == request.targetSeatIndex) seat.copy(hp = target.hp.copy(current = target.hp.current - 1))
-                    else seat
-                }
-                setup.deck.discard(listOf(request.card))
+                target.hp = target.hp.copy(current = target.hp.current - 1)
+                val card = inFlightZone.toList().single()
+                check(card.type == CardType.ATTACK) { "Expected ATTACK card in flight, got ${card.type}" }
+                inFlightZone.transfer(card, discardZone)
                 onEvent(
                     GameEvent.DamageDealt(
                         targetSeatIndex = request.targetSeatIndex,
@@ -116,25 +130,21 @@ class GameSession(
 
             is GameAction.EndPlayPhase -> {
                 if (seatIndex != currentSeatIndex)
-                    return Result.failure(IllegalArgumentException("Only the active seat can end the play phase"))
+                    return Result.failure(IllegalArgumentException(ERR_NOT_ACTIVE_SEAT_END))
                 if (pendingRequest != null)
-                    return Result.failure(IllegalArgumentException("Cannot end play phase while a response is pending"))
+                    return Result.failure(IllegalArgumentException(ERR_CANNOT_END_WHILE_PENDING))
                 currentPhase = GamePhase.Discard
                 Result.success(Unit)
             }
 
             is GameAction.Discard -> {
                 if (seatIndex != currentSeatIndex)
-                    return Result.failure(IllegalArgumentException("Only the active seat can discard"))
-                _seats = _seats.mapIndexed { i, s ->
-                    if (i == seatIndex) s.copy(handCards = s.handCards - action.cards.toSet()) else s
-                }
-                setup.deck.discard(action.cards)
+                    return Result.failure(IllegalArgumentException(ERR_NOT_ACTIVE_SEAT_DISCARD))
+                _seats[seatIndex].handZone.transferAll(action.cards, discardZone)
                 currentPhase = GamePhase.End
                 Result.success(Unit)
             }
 
-            else -> Result.success(Unit)
         }
     }
 
@@ -158,11 +168,10 @@ class GameSession(
 
     private fun advanceDrawPhase() {
         val seatIndex = currentSeatIndex!!
-        val drawn = setup.deck.draw(DRAW_COUNT)
-        val updatedSeat = _seats[seatIndex].copy(handCards = _seats[seatIndex].handCards + drawn)
-        _seats = _seats.mapIndexed { i, seat -> if (i == seatIndex) updatedSeat else seat }
+        val seat = _seats[seatIndex]
+        val drawn = setup.deck.draw(DRAW_COUNT, seatIndex)
         currentPhase = GamePhase.Play
         onEvent(GameEvent.CardsDrawn(seatIndex = seatIndex, cards = drawn))
-        onEvent(GameEvent.HandUpdated(seatIndex = seatIndex, cards = updatedSeat.handCards))
+        onEvent(GameEvent.HandUpdated(seatIndex = seatIndex, cards = seat.handCards))
     }
 }

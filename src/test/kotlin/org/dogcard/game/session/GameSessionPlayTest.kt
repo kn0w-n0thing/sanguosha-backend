@@ -16,8 +16,8 @@ class GameSessionPlayTest {
 
     private val factory = GameRoomFactory()
 
-    private fun attack(number: Int) = Card(CardType.ATTACK, Suit.SPADE, number)
-    private fun dodge(number: Int) = Card(CardType.DODGE, Suit.HEART, number)
+    private fun attack(number: Int) = Card(CardType.ATTACK, Suit.SPADE, number, id = number)
+    private fun dodge(number: Int) = Card(CardType.DODGE, Suit.HEART, number, id = 100 + number)
 
     private fun sessionAtPlayPhase(): GameSession {
         val deck = FakeDeck(
@@ -229,6 +229,23 @@ class GameSessionPlayTest {
         val nonActiveSeatIndex = 1 - activeSeatIndex
         val result = session.submitAction(nonActiveSeatIndex, GameAction.EndPlayPhase)
         assertTrue(result.isFailure)
+    }
+
+    @Test
+    fun `total card count is preserved after a full attack–dodge exchange`() {
+        val session = sessionAtPlayPhase()
+        val totalCards = 10
+        val activeSeatIndex = session.currentSeatIndex!!
+        val targetSeatIndex = 1 - activeSeatIndex
+        val attackCard = session.seats[activeSeatIndex].handCards.firstOfType(CardType.ATTACK)
+        session.submitAction(activeSeatIndex, GameAction.PlayAttack(card = attackCard, targetSeatIndex = targetSeatIndex))
+        val dodgeCard = session.seats[targetSeatIndex].handCards.firstOfType(CardType.DODGE)
+        session.submitAction(targetSeatIndex, GameAction.RespondWithDodge(card = dodgeCard))
+        val counted = session.seats.sumOf { it.handCards.size } +
+                session.inFlightZone.toList().size +
+                session.deck.remaining +
+                (session.deck as FakeDeck).discardPile.size
+        assertEquals(totalCards, counted)
     }
 
     @Test
