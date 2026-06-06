@@ -73,13 +73,13 @@ class GameSessionStartTest {
     }
 
     @Test
-    fun `start enters Judge phase for the SPY seat`() {
+    fun `start enters Begin phase for the SPY seat`() {
         val setup = factory.create1v1Setup()
         val session = GameSession(setup, random = Random(seed = 0))
         session.start()
         val spySeatIndex = session.seats.indexOfFirst { it.allegiance == Allegiance.RoleBased(Role.SPY) }
         assertEquals(spySeatIndex, session.currentSeatIndex)
-        assertEquals(GamePhase.Judge, session.currentPhase)
+        assertEquals(GamePhase.Begin, session.currentPhase)
     }
 
     @Test

@@ -206,11 +206,11 @@ Unit tests (Steps 1–4) are pure Kotlin, no Spring context. Step 5 uses Spring 
 - [x] Redesign card ownership — full TODO and test cases in [`card-ownership.md`](card-ownership.md)
   - All existing card-related tests must still pass after the refactor (behavior unchanged)
   - Invariant: at end of each action, sum of all zone sizes == total card count
-- [ ] Add a Begin phase before Judge in the turn sequence
-  - Modify: `start enters Judge phase for the SPY seat` → now enters Begin phase
-  - Modify: `End phase starts the next seat's turn at Judge phase` → now starts at Begin phase
-  - Modify: `Judge phase auto-advances when judgment area is empty` → Begin auto-advances to Judge first
-  - Add: `Begin phase auto-advances to Judge`
+- [x] Add a Begin phase before Judge in the turn sequence
+  - [x] Modify: `start enters Judge phase for the SPY seat` → now enters Begin phase
+  - [x] Modify: `End phase starts the next seat's turn at Judge phase` → now starts at Begin phase
+  - [x] Modify: `Judge phase auto-advances when judgment area is empty` → Begin auto-advances to Judge first
+  - [x] Add: `Begin phase auto-advances to Judge`
 
 ---
 

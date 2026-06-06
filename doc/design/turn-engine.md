@@ -12,6 +12,7 @@ Modelled as a **sealed class** for exhaustive `when` expressions and future exte
 ```
 sealed GamePhase                 — org.dogcard.model.game (to be created)
 ├── Idle     — waiting between turns
+├── Begin    — start-of-turn skills fire here; auto-advances if no skill reacts
 ├── Judge    — resolve delayed tricks in judgment area
 ├── Draw     — draw 2 cards (default)
 ├── Play     — play cards freely
@@ -21,12 +22,13 @@ sealed GamePhase                 — org.dogcard.model.game (to be created)
 
 Normal turn flow:
 ```
-Idle → Judge → Draw → Play → Discard → End → Idle (next seat)
+Idle → Begin → Judge → Draw → Play → Discard → End → Idle (next seat)
 ```
 
 | Phase   | Description                                                                                           |
 |---------|-------------------------------------------------------------------------------------------------------|
 | Idle    | Waiting; between turns                                                                                |
+| Begin   | Start-of-turn phase; skills with Judge/ENTER hooks fire here; auto-advances when no skill reacts      |
 | Judge   | Resolve each delayed trick in order; flip a card from deck; apply or discard based on suit/number    |
 | Draw    | Draw 2 cards (default; some skills modify this)                                                       |
 | Play    | Play cards freely until the player ends the phase                                                     |
@@ -56,9 +58,9 @@ PhaseCell
 └── seatIndex: Int     — which seat is active for this phase
 ```
 
-A full turn for seat N is initialized as five cells pushed onto the tape:
+A full turn for seat N is initialized as six cells pushed onto the tape:
 ```
-[Judge(N), Draw(N), Play(N), Discard(N), End(N)]
+[Begin(N), Judge(N), Draw(N), Play(N), Discard(N), End(N)]
 ```
 
 `Idle` is not a cell — it is the implicit state when the tape is empty (between turns).
@@ -83,6 +85,7 @@ PhaseTiming
 
 Checkpoint sequence per phase:
 ```
+Begin:   ENTER → EXIT
 Judge:   ENTER → [BEFORE_JUDGMENT → AFTER_JUDGMENT] × N cards → EXIT
 Draw:    ENTER → AFTER_DRAW → EXIT
 Play:    ENTER → EXIT        (card-level events are GameEvent, not phase hooks)
@@ -142,14 +145,14 @@ SeatScope — SELF / ANY
 
 | 技能 | Phase / Timing / Scope | Pattern | 效果（原文） |
 |------|------------------------|---------|-------------|
-| 诸葛亮·观星 | Judge / ENTER / SELF | BROADCAST | 准备阶段开始时，你可以观看牌堆顶的X张牌，然后以任意顺序置于牌堆顶或牌堆底（X为存活角色数，且至多为5）。 |
-| 甄姬·洛神 | Judge / ENTER / SELF | BROADCAST | 准备阶段开始时，你可以判定；若结果为黑色，你获得此判定牌并可以重复此流程。 |
-| 孙坚·英魂 | Judge / ENTER / SELF | BROADCAST | 准备阶段，若你已受伤，你可以选择一名其他角色并选择一项：1.令其摸X张牌，然后弃置一张牌；2.令其摸一张牌，然后弃置X张牌。（X为你已损失体力值） |
-| 甘夫人·神智 | Judge / ENTER / SELF | BROADCAST | 准备阶段，你可以弃置所有手牌，若你以此法弃置的手牌数不小于你的体力值，你回复1点体力。 |
-| 马岱·潜袭 | Judge / ENTER / SELF | BROADCAST | 准备阶段，你可以判定，然后选择距离为1的一名角色，其本回合不能使用或打出与判定结果颜色相同的手牌。 |
-| 于禁·节钺 | Judge / ENTER / SELF | BROADCAST | 准备阶段，你可以交给不是魏势力的一名角色一张手牌，然后令其执行一次"军令"。若其执行，你摸一张牌；若其不执行，你本回合摸牌阶段多摸三张牌。 |
-| 孙策·魂殇 | Judge / ENTER / SELF | BROADCAST | 副将技，锁定技，此武将牌减少半个阴阳鱼。准备阶段，若你的体力值不大于1，你本回合获得"英姿""英魂"。 |
-| 袁术·妄尊 | Judge / ENTER / ANY | BROADCAST | 主公技。主公的准备阶段，你可以摸一张牌；然后若主公的手牌上限大于0，本回合其手牌上限-1。 |
+| 诸葛亮·观星 | Begin / ENTER / SELF | BROADCAST | 准备阶段开始时，你可以观看牌堆顶的X张牌，然后以任意顺序置于牌堆顶或牌堆底（X为存活角色数，且至多为5）。 |
+| 甄姬·洛神 | Begin / ENTER / SELF | BROADCAST | 准备阶段开始时，你可以判定；若结果为黑色，你获得此判定牌并可以重复此流程。 |
+| 孙坚·英魂 | Begin / ENTER / SELF | BROADCAST | 准备阶段，若你已受伤，你可以选择一名其他角色并选择一项：1.令其摸X张牌，然后弃置一张牌；2.令其摸一张牌，然后弃置X张牌。（X为你已损失体力值） |
+| 甘夫人·神智 | Begin / ENTER / SELF | BROADCAST | 准备阶段，你可以弃置所有手牌，若你以此法弃置的手牌数不小于你的体力值，你回复1点体力。 |
+| 马岱·潜袭 | Begin / ENTER / SELF | BROADCAST | 准备阶段，你可以判定，然后选择距离为1的一名角色，其本回合不能使用或打出与判定结果颜色相同的手牌。 |
+| 于禁·节钺 | Begin / ENTER / SELF | BROADCAST | 准备阶段，你可以交给不是魏势力的一名角色一张手牌，然后令其执行一次"军令"。若其执行，你摸一张牌；若其不执行，你本回合摸牌阶段多摸三张牌。 |
+| 孙策·魂殇 | Begin / ENTER / SELF | BROADCAST | 副将技，锁定技，此武将牌减少半个阴阳鱼。准备阶段，若你的体力值不大于1，你本回合获得"英姿""英魂"。 |
+| 袁术·妄尊 | Begin / ENTER / ANY | BROADCAST | 主公技。主公的准备阶段，你可以摸一张牌；然后若主公的手牌上限大于0，本回合其手牌上限-1。 |
 | 司马懿·鬼才 | Judge / BEFORE_JUDGMENT / ANY | CHAIN | 在一张判定牌生效前，你可以打出一张手牌代替之。（payload: Card） |
 | 张角·鬼道 | Judge / BEFORE_JUDGMENT / ANY | CHAIN | 当一名角色的判定牌生效前，你可以打出一张黑色牌替换之。（payload: Card；在鬼才结果基础上生效） |
 | 郭嘉·天妒 | Judge / AFTER_JUDGMENT / SELF | BROADCAST | 当你的判定牌生效后，你可以获得此牌。 |
@@ -160,8 +163,8 @@ SeatScope — SELF / ANY
 | 颜良文丑·双雄 | Draw / ENTER / SELF | BROADCAST | 摸牌阶段，你可以改为进行一次判定，你获得判定牌且本回合可以将一张与之颜色不同的手牌当【决斗】使用。 |
 | 董卓·横征 | Draw / ENTER / SELF | BROADCAST | 摸牌阶段，若你的体力值为1或你没有手牌，你可以改为获得每名其他角色区域里的一张牌。 |
 | 李典·恂恂 | Draw / ENTER / SELF | BROADCAST | 摸牌阶段开始时，你可以观看牌堆顶的四张牌，然后将其中两张牌置于牌堆顶，将剩余牌置于牌堆底。 |
-| 夏侯渊·神速 | Judge / ENTER / SELF | BROADCAST | 你可以做出如下选择：1.跳过判定阶段和摸牌阶段；2.跳过出牌阶段并弃置一张装备牌；3.跳过弃牌阶段并翻面。你每选择一项，视为你使用一张无距离限制的【杀】。（调用 engine.skip()） |
-| 张郃·巧变 | Judge / ENTER / SELF | BROADCAST | 你可以弃置一张手牌并跳过一个阶段（准备阶段和结束阶段除外），若为：摸牌阶段，你可以获得至多两名角色各一张手牌；出牌阶段，你可以移动场上一张牌。（调用 engine.skip()） |
+| 夏侯渊·神速 | Begin / ENTER / SELF | BROADCAST | 你可以做出如下选择：1.跳过判定阶段和摸牌阶段；2.跳过出牌阶段并弃置一张装备牌；3.跳过弃牌阶段并翻面。你每选择一项，视为你使用一张无距离限制的【杀】。（调用 engine.skip()） |
+| 张郃·巧变 | Begin / ENTER / SELF | BROADCAST | 你可以弃置一张手牌并跳过一个阶段（准备阶段和结束阶段除外），若为：摸牌阶段，你可以获得至多两名角色各一张手牌；出牌阶段，你可以移动场上一张牌。（调用 engine.skip()） |
 | 周瑜·英姿 | Draw / AFTER_DRAW / SELF | BROADCAST | 摸牌阶段，你可以额外摸一张牌。 |
 | 鲁肃·好施 | Draw / AFTER_DRAW / SELF | BROADCAST | 摸牌阶段，你可以多摸两张牌，然后若你的手牌数大于5，你将一半的手牌（向下取整）交给手牌最少的一名其他角色。 |
 | 刘禅·放权 | Play / ENTER / SELF | BROADCAST | 你可以跳过出牌阶段，然后本回合结束时，你可以弃置一张手牌并令一名其他角色执行一个额外的回合。（调用 engine.skip(Play)；End/EXIT 调用 engine.append(extraTurn)） |
@@ -199,7 +202,7 @@ TurnEngine
 ├── tape:    ArrayDeque<PhaseCell>   — remaining cells to execute
 ├── current: PhaseCell?              — cell currently executing (null between turns)
 │
-├── startTurn(seatIndex: Int)        — push [Judge, Draw, Play, Discard, End](seatIndex) onto tape
+├── startTurn(seatIndex: Int)        — push [Begin, Judge, Draw, Play, Discard, End](seatIndex) onto tape
 ├── advance()                        — pop next cell from tape and execute it
 ├── skip(phase: GamePhase)           — remove all cells of given phase from tape
 │                                      (called by skills and delayed-trick effects)
@@ -228,7 +231,7 @@ Phase-internal checkpoint (Judge resolving one delayed trick):
 
 Tape state at key moments:
 ```
-Turn start (seat 2):   tape = [Judge(2), Draw(2), Play(2), Discard(2), End(2), ...]
+Turn start (seat 2):   tape = [Begin(2), Judge(2), Draw(2), Play(2), Discard(2), End(2), ...]
 After 神速 skips Draw: tape = [Play(2), Discard(2), End(2), ...]   ← Draw(2) removed
-After 奉迎 extra turn: tape = [..., Judge(2), Draw(2), Play(2), Discard(2), End(2)]  ← appended
+After 奉迎 extra turn: tape = [..., Begin(2), Judge(2), Draw(2), Play(2), Discard(2), End(2)]  ← appended
 ```

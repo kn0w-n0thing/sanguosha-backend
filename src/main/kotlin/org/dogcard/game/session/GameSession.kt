@@ -54,7 +54,7 @@ class GameSession(
         }
         val spyIndex = _seats.indexOfFirst { it.allegiance == Allegiance.RoleBased(Role.SPY) }
         currentSeatIndex = spyIndex
-        currentPhase = GamePhase.Judge
+        currentPhase = GamePhase.Begin
         onEvent(GameEvent.GameStarted(
             firstSeatIndex = spyIndex,
             seatViews = _seats.map { seat ->
@@ -150,6 +150,7 @@ class GameSession(
 
     fun advancePhase() {
         when (currentPhase) {
+            GamePhase.Begin -> currentPhase = GamePhase.Judge
             GamePhase.Judge -> advanceJudgePhase()
             GamePhase.Draw  -> advanceDrawPhase()
             GamePhase.End -> advanceEndPhase()
@@ -163,7 +164,7 @@ class GameSession(
 
     private fun advanceEndPhase() {
         currentSeatIndex = (currentSeatIndex!! + 1) % _seats.size
-        currentPhase = GamePhase.Judge
+        currentPhase = GamePhase.Begin
     }
 
     private fun advanceDrawPhase() {

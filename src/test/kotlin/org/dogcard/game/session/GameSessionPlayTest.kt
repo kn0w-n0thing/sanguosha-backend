@@ -27,6 +27,7 @@ class GameSessionPlayTest {
         )
         val session = GameSession(factory.create1v1Setup(deck), random = Random(seed = 0))
         session.start()
+        session.advancePhase() // Begin → Judge
         session.advancePhase() // Judge → Draw
         session.advancePhase() // Draw → Play
         return session
@@ -281,7 +282,7 @@ class GameSessionPlayTest {
     }
 
     @Test
-    fun `End phase starts the next seat's turn at Judge phase`() {
+    fun `End phase starts the next seat's turn at Begin phase`() {
         val session = sessionAtPlayPhase()
         val activeSeatIndex = session.currentSeatIndex!!
         val nextSeatIndex = 1 - activeSeatIndex
@@ -290,8 +291,8 @@ class GameSessionPlayTest {
         val handLimit = session.seats[activeSeatIndex].hp.current
         val toDiscard = hand.takeLast(hand.size - handLimit)
         session.submitAction(activeSeatIndex, GameAction.Discard(cards = toDiscard))
-        session.advancePhase() // End → next seat's Judge
+        session.advancePhase() // End → next seat's Begin
         assertEquals(nextSeatIndex, session.currentSeatIndex)
-        assertEquals(GamePhase.Judge, session.currentPhase)
+        assertEquals(GamePhase.Begin, session.currentPhase)
     }
 }

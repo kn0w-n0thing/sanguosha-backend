@@ -30,6 +30,7 @@ class GameSessionEventTest {
         )
         val session = GameSession(factory.create1v1Setup(deck), random = Random(seed = 0), onEvent = { events += it })
         session.start()
+        session.advancePhase() // Begin → Judge
         session.advancePhase() // Judge → Draw
         session.advancePhase() // Draw → Play
         events.clear()
@@ -56,6 +57,7 @@ class GameSessionEventTest {
         session.start()
         val activeSeatIndex = session.currentSeatIndex!!
         events.clear()
+        session.advancePhase() // Begin → Judge
         session.advancePhase() // Judge → Draw
         session.advancePhase() // Draw → Play, should emit HandUpdated
         val handUpdated = events.filterIsInstance<GameEvent.HandUpdated>()
@@ -69,6 +71,7 @@ class GameSessionEventTest {
         val session = GameSession(factory.create1v1Setup(), random = Random(seed = 0), onEvent = { events += it })
         session.start()
         val activeSeatIndex = session.currentSeatIndex!!
+        session.advancePhase() // Begin → Judge
         session.advancePhase() // Judge → Draw
         session.advancePhase() // Draw → Play, emits CardsDrawn
         val cardsDrawn = events.filterIsInstance<GameEvent.CardsDrawn>().first()
@@ -84,6 +87,7 @@ class GameSessionEventTest {
         val activeSeatIndex = session.currentSeatIndex!!
         val handBefore = session.seats[activeSeatIndex].handCards.toList()
         events.clear()
+        session.advancePhase() // Begin → Judge
         session.advancePhase() // Judge → Draw
         session.advancePhase() // Draw → Play
         val cardsDrawn = events.filterIsInstance<GameEvent.CardsDrawn>().first()
